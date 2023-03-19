@@ -7,6 +7,18 @@ from .steering import Steering
 from .throttle import Throttle
 
 class Lap:
+
+    class Section:
+        def __init__(self, df: pd.DataFrame, start: float, end: float) -> None:
+            self.start = start
+            self.end = end
+
+            self.time = self.section_time(df)
+
+        def section_time(self, df: pd.DataFrame) -> float:
+            # TODO
+            pass
+
     def __init__(self, df: pd.DataFrame, **kwargs) -> None:
         self.number = kwargs.get('number', -1)
         self.driver = kwargs.get('driver', 'Unknown')
@@ -26,6 +38,21 @@ class Lap:
 
         # Vector Nav
         df['dist1'] -= df['dist1'].min()
+
+        # Lap sections
+        self.set_lap_sections()
+
+    def set_lap_sections(self) -> None:
+        # Sectors
+        self.sector_changing_points = self.decide_changing_points()
+        self.sectors = [Lap.Section(self.df, start, end) for start, end in zip(self.sector_changing_points[:-1], self.sector_changing_points[1:])]
+        # Microsectors
+        self.microsector_changing_points = self.decide_changing_points(self.sector_changing_points)
+        self.microsectors = [Lap.Section(self.df, start, end) for start, end in zip(self.microsector_changing_points[:-1], self.microsector_changing_points[1:])]
+
+    def decide_changing_points(self, needed_points: list | None = None) -> list:
+        # TODO
+        return []
 
     def expected_unique(self, column: str) -> float | None:
         unique = self.df[column].unique()
