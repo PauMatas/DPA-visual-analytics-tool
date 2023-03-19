@@ -17,7 +17,7 @@ class Run:
     def describe(self):
         return self.df.describe()
     
-    def steering_smoothness_chart(self):
+    def steering_smoothness_chart(self) -> alt.Chart:
         steering_json = [
             {'smoothness': lap.steering.smoothness, 'lap': lap.number, 'laptime': lap.laptime, 'driver': lap.driver}
             for lap in self.laps
@@ -26,7 +26,7 @@ class Run:
         chart = self._smoothness_chart(pd.DataFrame(steering_json))
         return chart.properties(title='Steering smoothness')
     
-    def throttle_smoothness_chart(self):
+    def throttle_smoothness_chart(self) -> alt.Chart:
         throttle_json = [
             {'smoothness': lap.throttle.smoothness, 'lap': lap.number, 'laptime': lap.laptime, 'driver': lap.driver}
             for lap in self.laps
@@ -35,10 +35,27 @@ class Run:
         chart = self._smoothness_chart(pd.DataFrame(throttle_json))
         return chart.properties(title='Throttle smoothness')
 
-    def _smoothness_chart(self, df):
+    def _smoothness_chart(self, df) -> alt.Chart:
         return alt.Chart(df).mark_point().encode(
             y='laptime:Q',
             x = 'smoothness:Q',
             shape='driver:N',
             tooltip=['lap', 'laptime', 'driver']
         )
+    
+    def breaking_points_chart(self) -> alt.Chart:
+        breaking_points = self.breaking_points()
+        chart = alt.Chart(pd.DataFrame(breaking_points)).mark_line().encode(
+            y='mean(breaking_point):Q',
+            x='breaking zone:N',
+            color='driver:N',
+            tooltip=['breaking_point', 'driver']
+        )
+        return chart.properties(title='Breaking points')
+    
+    def breaking_points(self) -> list:
+        # TODO: determine the braking zones and the breaking points for each lap and brake zone
+        # options:
+        # - clustering algorithm to determine the zones (problem: if a driver brakes two times in the same zone, it will be counted as the furthest one)
+        # - determine the zones by hand
+        # - idk

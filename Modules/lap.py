@@ -35,6 +35,7 @@ class Lap:
         # Controls
         self.steering = Steering(df)
         self.throttle = Throttle(df)
+        self.breaking_points = self.breaking_points()
 
         # Vector Nav
         df['dist1'] -= df['dist1'].min()
@@ -72,6 +73,23 @@ class Lap:
                 previous = row
 
         return pd.DataFrame(changing_points)
+    
+    def breaking_points(self) -> list:
+        # TODO: no breaking column in this dataset
+        # previous = False
+        # breaking_points = []
+
+        # for i, (_, row) in enumerate(self.df['breaking'].items()):
+        #     if previous is False and row >= 3: # 3bar?
+        #         breaking_points.append(self.df['dist1'][i])
+        #         previous = True
+        #     elif previous is True and row < 3:
+        #         previous = False
+                
+        # return breaking_points
+        return []
+    
+    # CHARTS
     
     def gg_diagram(self):
         return alt.Chart(self.df).mark_point().encode(
