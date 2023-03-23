@@ -7,15 +7,28 @@ from .lap import Lap
 class Run:
     COLUMNS = ['TimeStamp', 'Throttle', 'Steering', 'VN_ax', 'VN_ay', 'xPosition', 'yPosition', 'zPosition', 'xVelocity', 'yVelocity', 'laps', 'laptime', 'globalDelta', 'delta', 'dist1']
 
-    def __init__(self, csv_path: str) -> None:
-        self.df = pd.read_csv(csv_path)[self.COLUMNS]
-        self.laps = [
-            Lap(lap_df.reset_index(), number=i, driver=np.random.choice(['Rodas', 'Matas']))
-            for i, (_, lap_df) in enumerate(self.df.groupby('laps'))
-        ]
+    def __init__(self, csv_path: str | None = None, driver: str = 'Unknown') -> None:
+        if csv_path is not None:
+            self.df = pd.read_csv(csv_path)[self.COLUMNS]
+            self.laps = [
+                Lap(lap_df.reset_index(), number=i, driver=driver)
+                for i, (_, lap_df) in enumerate(self.df.groupby('laps'))
+            ]
     
     def describe(self):
         return self.df.describe()
+    
+    def __add__(self, other):
+        sum = Run()
+        sum.df = pd.concat([self.df, other.df])
+
+        sum.laps = other.laps
+        for lap in sum.laps:
+            lap.number += len(self.laps)
+        sum.laps = self.laps + sum.laps
+        
+        return sum
+
     
     def steering_smoothness_chart(self) -> alt.Chart:
         steering_json = [
@@ -59,3 +72,4 @@ class Run:
         # - clustering algorithm to determine the zones (problem: if a driver brakes two times in the same zone, it will be counted as the furthest one)
         # - determine the zones by hand
         # - idk
+        return []
