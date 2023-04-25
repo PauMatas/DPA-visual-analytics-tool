@@ -79,7 +79,7 @@ class Lap:
         # previous = False
         # breaking_points = []
 
-        # for i, (_, row) in enumerate(self.df['breaking'].items()):
+        # for i, (_, row) in enumerate(self.df['BPE'].items()):
         #     if previous is False and row >= 3: # 3bar?
         #         breaking_points.append(self.df['dist1'][i])
         #         previous = True
@@ -95,6 +95,7 @@ class Lap:
         return alt.Chart(self.df).mark_point().encode(
             x='VN_ax:Q',
             y='VN_ay:Q',
+            color=alt.Color('laps:N', scale=alt.Scale(scheme='tableau10')),
             tooltip=['TimeStamp', 'VN_ax', 'VN_ay']
         )
     
@@ -127,8 +128,8 @@ class Lap:
 
         start_df = pd.DataFrame([{'xPosition': icon[0], 'yPosition': icon[1]}])
         start = alt.Chart(start_df).mark_point().encode(
-            x='xPosition:Q',
-            y='yPosition:Q',
+            x=alt.X('xPosition:Q', scale=alt.Scale(zero=False, domain=(-100, 100))),
+            y=alt.Y('yPosition:Q', scale=alt.Scale(zero=False, domain=(-100, 100))),
             shape=alt.value('wedge'),
             angle=alt.value(90 - angle),
             color=alt.value('black'),

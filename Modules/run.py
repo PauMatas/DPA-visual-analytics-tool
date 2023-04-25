@@ -5,7 +5,7 @@ import numpy as np
 from .lap import Lap
 
 class Run:
-    COLUMNS = ['TimeStamp', 'Throttle', 'Steering', 'VN_ax', 'VN_ay', 'xPosition', 'yPosition', 'zPosition', 'xVelocity', 'yVelocity', 'laps', 'laptime', 'globalDelta', 'delta', 'dist1']
+    COLUMNS = ['TimeStamp', 'Throttle', 'Steering', 'VN_ax', 'VN_ay', 'xPosition', 'yPosition', 'zPosition', 'xVelocity', 'yVelocity', 'laps', 'laptime', 'globalDelta', 'delta', 'dist1', 'BPE']
 
     def __init__(self, csv_path: str | None = None, driver: str = 'Unknown') -> None:
         if csv_path is not None:
@@ -26,7 +26,7 @@ class Run:
         for lap in sum.laps:
             lap.number += len(self.laps)
         sum.laps = self.laps + sum.laps
-        
+
         return sum
 
     
