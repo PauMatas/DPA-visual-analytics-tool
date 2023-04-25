@@ -2,7 +2,12 @@ import altair as alt
 import pandas as pd
 import numpy as np
 
-COLORS = ['#4E79A7', '#A0CBE8', '#F28E2B', '#FFBE7D', '#59A14F', '#8CD17D', '#B6992D', '#F1CE63', '#499894', '#86BCB6', '#E15759', '#FF9D9A', '#79706E', '#BAB0AC', '#D37295', '#FABFD2', '#B07AA1', '#D4A6C8', '#9D7660', '#D7B5A6']
+COLORS = [ # tableau 10
+    '#4E79A7', '#F28E2B', '#E15759', '#86BCB6', '#59A14F', '#F1CE63', '#B07AA1', '#FF9D9A', '#9D7660', '#BAB0AC']
+
+# COLORS = [ # tableau 20
+#     '#4E79A7', '#A0CBE8', '#F28E2B', '#FFBE7D', '#59A14F', '#8CD17D', '#B6992D', '#F1CE63', '#499894', '#86BCB6',
+#     '#E15759', '#FF9D9A', '#79706E', '#BAB0AC', '#D37295', '#FABFD2', '#B07AA1', '#D4A6C8', '#9D7660', '#D7B5A6'] 
 
 class RadarChart:
     def __init__(self, df: pd.DataFrame, n_ticks: int, **kwargs):
@@ -79,7 +84,7 @@ class RadarChart:
             x=alt.X("dx:Q", scale=alt.Scale(domain=self.domain), axis=None),
             y=alt.Y("dy:Q", scale=alt.Scale(domain=self.domain), axis=None),
             order="axis:Q"
-        ).properties(width=self.width, height=self.height)
+        )
     
     def _background_lines(self):
         lines = alt.LayerChart()
@@ -94,7 +99,7 @@ class RadarChart:
                 x=alt.X("dx:Q", scale=alt.Scale(domain=self.domain), axis=None),
                 y=alt.Y("dy:Q", scale=alt.Scale(domain=self.domain), axis=None),
                 order="axis:Q"
-            ).properties(width=self.width, height=self.height)
+            )
             
         return lines
     
@@ -129,7 +134,7 @@ class RadarChart:
             y=alt.Y("dy:Q", scale=alt.Scale(domain=self.domain), axis=None),
             order="axis:Q",
             text="metric:Q"
-        ).properties(width=self.width, height=self.height)
+        )
     
     def _axis_labels(self):
         return alt.Chart(self.df).transform_filter(
@@ -143,19 +148,20 @@ class RadarChart:
             y=alt.Y("dy:Q", scale=alt.Scale(domain=self.domain), axis=None),
             order="axis:Q",
             text="axis_name"
-        ).properties(width=self.width, height=self.height) 
+        )
     
     def _radar_chart(self, line):
         return alt.Chart(self.df).transform_filter(
             (alt.datum.line == line)
         ).transform_calculate(
             dx=alt.datum.metric * alt.datum.cos,
-            dy=alt.datum.metric * alt.datum.sin
+            dy=alt.datum.metric * alt.datum.sin,
         ).mark_line(strokeWidth=2, strokeOpacity=1, color=COLORS[line]).encode(
             x=alt.X("dx:Q", scale=alt.Scale(domain=self.domain), axis=None),
             y=alt.Y("dy:Q", scale=alt.Scale(domain=self.domain), axis=None),
-            order="axis"
-        ).properties(width=self.width, height=self.height)
+            order="axis",
+            tooltip="metric:Q"
+        )
     
     def _radars_chart(self):
         radars = alt.layer()

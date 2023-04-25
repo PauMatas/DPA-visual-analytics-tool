@@ -133,3 +133,4 @@ dmypy.json
 
 # Data
 data/**/*.csv
+20221216_Run2.csv
