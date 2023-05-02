@@ -13,7 +13,7 @@ contourpy==1.0.7
 cycler==0.11.0
 debugpy==1.6.7
 decorator==5.1.1
--e git+https://github.com/PauMatas/DPA-visualization-tool.git@73bbf7c2cd80f56a0036bad3524f8dedf5767d62#egg=DPA_visualization_tool
+-e git+https://github.com/PauMatas/DPA-visualization-tool.git@c5ca7042a1ad5c7e6047ff7850102b5a54f15a54#egg=DPA_visualization_tool
 entrypoints==0.4
 executing==1.2.0
 fonttools==4.39.3
