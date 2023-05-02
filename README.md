@@ -2,11 +2,11 @@
 
 # Requirements
 
-You need to install [TILK-E](https://bcnemotorsport.upc.edu:81/pol.puigdemont/tilk-e) as tilk_e with this command:
+You need to install [TILK-E](https://bcnemotorsport.upc.edu:81/pol.puigdemont/tilk-e) as tilke with this command:
 
 ```shell
-mkdir tilk_e
-git clone https://bcnemotorsport.upc.edu:81/pol.puigdemont/tilk-e tilk_e
+mkdir tilke
+git clone https://bcnemotorsport.upc.edu:81/pol.puigdemont/tilk-e tilke
 ```
 
 And the resulting files tree will be:
@@ -16,7 +16,7 @@ And the resulting files tree will be:
 |   ├── data
 |   ├── Modules
 |   ├── ...
-|   └── tilk_e
+|   └── tilke
 │       ├── .git
 │       └── ...
 ```

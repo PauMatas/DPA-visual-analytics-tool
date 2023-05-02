@@ -3,14 +3,8 @@ import pandas as pd
 import altair as alt
 import numpy as np
 import json
-
 from os import listdir
 from os.path import dirname, abspath, join, isfile
-import sys
-
-sys.path.append(dirname(abspath(__file__)))
-sys.path.append(join(dirname(dirname(abspath(__file__))), 'data'))
-sys.path.append(dirname(dirname(abspath(__file__))))
 
 from Modules import Run
 from Modules.radarchart import RadarChart
