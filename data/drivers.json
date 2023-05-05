@@ -1,7 +1,8 @@
 {
-    "proves_pilots": {
-        "20221220_Run12.csv": "Rodas",
-        "20221220_Run13.csv": "Rodas",
-        "20221220_Run14.csv": "Rodas"
+    "TILK-E:1337": {
+        "1337_Run0.csv": "GRO-Online"
+    },
+    "TILK-E:420": {
+        "420_Run0.csv": "GRO-Online"
     }
 }

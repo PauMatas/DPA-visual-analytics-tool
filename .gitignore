@@ -96,6 +96,7 @@ dmypy.json
 .DS_Store
 
 # Data
+real_data/
 data/**/*.csv
 20221216_Run2.csv
 

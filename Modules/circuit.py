@@ -78,16 +78,16 @@ class CircuitChart(Circuit):
 
         chart = (
             alt.Chart(lines_df).mark_line().encode(
-                x=alt.X("x", axis=None),
-                y=alt.Y("y", axis=None),
-                color=alt.Color("curve", legend=None),
-                order="index",
+                x=alt.X("x:Q", axis=None),
+                y=alt.Y("y:Q", axis=None),
+                color=alt.Color("curve:N", legend=None),
+                order="index:O",
             ) + 
             alt.Chart(circles_df).mark_circle().encode(
-                x=alt.X("x", axis=None),
-                y=alt.Y("y", axis=None),
-                shape=alt.Shape("type", legend=None),
-                color=alt.Color("curve", legend=None),
+                x=alt.X("x:Q", axis=None),
+                y=alt.Y("y:Q", axis=None),
+                shape=alt.Shape("type:N", legend=None),
+                color=alt.Color("curve:N", legend=None),
             )
         )
         return chart
@@ -95,4 +95,4 @@ class CircuitChart(Circuit):
     def set_sectors(self):
         """Sets the sectors of the circuit"""
         self.sector_doors = [self.middle_curve(self.middle_curve.t[-1] * (i+1)/self.N_SECTORS) for i in range(self.N_SECTORS)]
-        self.microsector_doors = [self.middle_curve(self.middle_curve.t[-1] * (i+1)/self.N_SECTORS) for i in range(self.N_MICROSECTORS)]
+        self.microsector_doors = [self.middle_curve(self.middle_curve.t[-1] * (i+1)/self.N_MICROSECTORS) for i in range(self.N_MICROSECTORS)]
