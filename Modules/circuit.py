@@ -45,26 +45,31 @@ def spline_chart_df(spline: Spline, precision: int = 1000, showcones: bool = Tru
 
 
 class CircuitChart(Circuit):
+    N_SECTORS = 3
+    N_MICROSECTORS = 10 * N_SECTORS
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # self.set_sectors()
+        self.set_sectors()
 
-    def chart(self) -> alt.Chart:
+    def chart(self, middle_curve_df: pd.DataFrame = None, important_points: pd.DataFrame = None) -> alt.Chart:
         """Charts the circuit layout
 
         Arguments:
             self (Circuit) : the object itself
+            middle_curve_df (pd.DataFrame) : the dataframe containing the middle curve
         Returns:
             chart (alt.Chart) : the chart of the circuit layout
         """
         curve_options = {
-            "middle": self.middle_curve,
             "interior": self.interior_curve,
             "exterior": self.exterior_curve,
         }
+        if middle_curve_df is None:
+            curve_options["middle"] = self.middle_curve
 
-        lines_df = pd.DataFrame(columns=["x", "y", "curve", "index"])
-        circles_df = pd.DataFrame(columns=["x", "y", "type", "curve"])
+        lines_df = pd.DataFrame(columns=["x", "y", "curve", "index"]) if middle_curve_df is None else middle_curve_df
+        circles_df = pd.DataFrame(columns=["x", "y", "type", "curve"]) if important_points is None else important_points
         for curve_name, curve in curve_options.items():
             if curve is not None:
                 aux_lines_df, aux_circles_df = spline_chart_df(curve, curve_name=curve_name)
@@ -89,4 +94,5 @@ class CircuitChart(Circuit):
     
     def set_sectors(self):
         """Sets the sectors of the circuit"""
-        raise NotImplementedError
+        self.sector_doors = [self.middle_curve(self.middle_curve.t[-1] * (i+1)/self.N_SECTORS) for i in range(self.N_SECTORS)]
+        self.microsector_doors = [self.middle_curve(self.middle_curve.t[-1] * (i+1)/self.N_SECTORS) for i in range(self.N_MICROSECTORS)]
