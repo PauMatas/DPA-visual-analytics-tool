@@ -5,11 +5,16 @@ import numpy as np
 from .lap import Lap
 
 class Run:
-    COLUMNS = ['TimeStamp', 'Throttle', 'Steering', 'VN_ax', 'VN_ay', 'xPosition', 'yPosition', 'zPosition', 'xVelocity', 'yVelocity', 'laps', 'laptime', 'globalDelta', 'delta', 'dist1', 'BPE']
+    COLUMNS = ['TimeStamp', 'Throttle', 'Steering', 'VN_ax', 'VN_ay', 'xPosition', 'yPosition', 'zPosition', 'Velocity', 'laps', 'laptime', 'globalDelta', 'delta', 'dist1', 'BPE']
 
-    def __init__(self, csv_path: str | None = None, driver: str = 'Unknown') -> None:
-        if csv_path is not None:
-            self.df = pd.read_csv(csv_path)[self.COLUMNS]
+    def __init__(self, csv: str | None | pd.DataFrame = None, driver: str = 'Unknown') -> None:
+        if csv is not None:
+            if isinstance(csv, pd.DataFrame):
+                if not all([col in csv.columns for col in self.COLUMNS]):
+                    raise ValueError(f'csv must contain all of the following columns: {self.COLUMNS}')
+                self.df = csv[self.COLUMNS]
+            if isinstance(csv, str):
+                self.df = pd.read_csv(csv)[self.COLUMNS]
             self.laps = [
                 Lap(lap_df.reset_index(), number=i, driver=driver)
                 for i, (_, lap_df) in enumerate(self.df.groupby('laps'))
