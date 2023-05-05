@@ -100,7 +100,10 @@ data/**/*.csv
 20221216_Run2.csv
 
 # TILK-E
-tilk-e/
+tilke/
+
+# GRO
+gro/
 
 # Miscellaneous files
 *.log
