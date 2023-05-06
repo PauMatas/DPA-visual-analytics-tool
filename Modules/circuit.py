@@ -96,3 +96,65 @@ class CircuitChart(Circuit):
         """Sets the sectors of the circuit"""
         self.sector_doors = [self.middle_curve(self.middle_curve.t[-1] * (i+1)/self.N_SECTORS) for i in range(self.N_SECTORS)]
         self.microsector_doors = [self.middle_curve(self.middle_curve.t[-1] * (i+1)/self.N_MICROSECTORS) for i in range(self.N_MICROSECTORS)]
+
+    def colored_sectors_chart(self, info: list, microsectors: bool = False) -> alt.Chart:
+        """Charts the circuit layout with the sectors colored depending on the time performance
+
+        Arguments:
+            self (Circuit) : the object itself
+            info (list) : the info of the sectors time performance
+            microsectors (bool) : if true colors the microsectors instead of the sectors
+        Returns:
+            chart (alt.Chart) : the chart of the circuit layout with the sectors colored
+        """
+
+        if (not microsectors and len(info) != self.N_SECTORS) or (microsectors and len(info) != self.N_MICROSECTORS):
+            raise ValueError(f"The number of {'microsectors' if microsectors else 'sectors'} info must be equal to the number {'microsectors' if microsectors else 'sectors'} of the circuit")
+        
+        curve_options = {
+            "middle": self.middle_curve,
+            # "interior": self.interior_curve,
+            # "exterior": self.exterior_curve,
+        }
+
+        df = pd.DataFrame(columns=["x", "y", "sector", "index", "curve", "delta"])
+
+        for track_name, track in curve_options.items():
+            start = track.t[0]
+            end = track.t[-1]
+            precision = 1000
+            sectors = self.N_MICROSECTORS if microsectors else self.N_SECTORS
+            curve_df = pd.DataFrame(columns=["x", "y", "sector", "index"])
+
+            for i in range(sectors):
+                sector_start = start if i == 0 else end * i/sectors
+                sector_end = end * (i+1)/sectors
+                sector = np.linspace(sector_start, sector_end, num=precision//sectors)
+                gamma = track(sector)
+                sector_df = pd.DataFrame(gamma, columns=["x", "y"])
+                sector_df["index"] = sector_df.index
+                sector_df["sector"] = i + 1
+                sector_df["delta"] = info[i]
+                curve_df = pd.concat([curve_df, sector_df])
+
+            curve_df["curve"] = track_name
+            df = pd.concat([df, curve_df])
+
+        return alt.Chart(df).mark_line().encode(
+            x=alt.X("x", axis=None),
+            y=alt.Y("y", axis=None),
+            color=alt.Color(
+                "delta:N",
+                scale=alt.Scale(range=["purple", "green", "yellow"], domain=["best", "personal_best", "other"])
+            ),
+            order="index",
+            detail=alt.Detail(["curve:N", "sector:N"]),
+            strokeWidth=alt.condition(
+                alt.datum.curve == "middle",
+                alt.value(10),
+                alt.value(1)),
+            strokeOpacity=alt.condition(
+                alt.datum.curve == "middle",
+                alt.value(0.5),
+                alt.value(1))  
+        )
