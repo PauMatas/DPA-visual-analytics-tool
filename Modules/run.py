@@ -1,13 +1,19 @@
 import pandas as pd
 import altair as alt
 import numpy as np
+from os.path import basename
 
 from .lap import Lap
 
 class Run:
-    COLUMNS = ['TimeStamp', 'Throttle', 'Steering', 'VN_ax', 'VN_ay', 'xPosition', 'yPosition', 'zPosition', 'Velocity', 'laps', 'laptime', 'globalDelta', 'delta', 'dist1', 'BPE']
+    COLUMNS = ['TimeStamp', 'Throttle', 'Steering', 'VN_ax', 'VN_ay', 'xPosition', 'yPosition', 'zPosition', 'Velocity', 'laps', 'delta', 'dist1', 'BPE']
 
-    def __init__(self, csv: str | None | pd.DataFrame = None, driver: str = 'Unknown') -> None:
+    def __init__(self, csv: str | None | pd.DataFrame = None, info: dict = None, filename: str = None) -> None:
+        if info is not None:
+            self.info = info
+        else:
+            self.info = {}
+
         if csv is not None:
             if isinstance(csv, pd.DataFrame):
                 if not all([col in csv.columns for col in self.COLUMNS]):
@@ -15,8 +21,11 @@ class Run:
                 self.df = csv[self.COLUMNS]
             if isinstance(csv, str):
                 self.df = pd.read_csv(csv)[self.COLUMNS]
+                filename = basename(csv)
+            if filename is None:
+                raise ValueError('filename must be provided if csv is not a string')
             self.laps = [
-                Lap(lap_df.reset_index(), number=i, driver=driver)
+                Lap(lap_df.reset_index(), number=i, info=self.info, filename=filename)
                 for i, (_, lap_df) in enumerate(self.df.groupby('laps'))
             ]
     
@@ -34,7 +43,7 @@ class Run:
 
         return sum
 
-    
+
     def steering_smoothness_chart(self) -> alt.Chart:
         steering_json = [
             {'smoothness': lap.steering.smoothness, 'lap': lap.number, 'laptime': lap.laptime, 'driver': lap.driver}

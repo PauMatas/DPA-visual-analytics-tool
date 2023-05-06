@@ -7,7 +7,9 @@ from gro.gro4dpa import *
 
 
 DATA_DIR = './data'
-DRIVERS_JSON_PATH = DATA_DIR + '/drivers.json'
+INFO_JSON_PATH = DATA_DIR + '/info.json'
+N_SECTORS = 3
+N_MICROSECTORS = 10 * N_SECTORS
 
 def generate_run(gates: Gates, circuit: CircuitChart) -> tuple[list[pd.DataFrame], list[str]]:
     """Generate a run of the circuit."""
@@ -33,26 +35,75 @@ def generate_run(gates: Gates, circuit: CircuitChart) -> tuple[list[pd.DataFrame
     return runs_dfs_list, drivers
 
 
-def save_run(seed: int, run_df: list[pd.DataFrame], drivers: list[str]):
+def save_run(seed: int, run_df: list[pd.DataFrame], run_info: dict) -> None:
     """Save run to disk."""
     
+    # Save run info to info.json
     try:
-        with open(DRIVERS_JSON_PATH, 'r') as f:
-            drivers_json = json.load(f)
+        with open(INFO_JSON_PATH, 'r') as f:
+            info_json = json.load(f)
     except FileNotFoundError:
-        drivers_json = {}
+        info_json = {}
 
+    info_json[f'TILK-E:{seed}'] = run_info
+
+    with open(INFO_JSON_PATH, 'w') as f:
+        json.dump(info_json, f, indent=4, ensure_ascii=False)
+
+    # Save run to disk
     RUN_DIR = F'{DATA_DIR}/TILK-E:{seed}'
     makedirs(RUN_DIR, exist_ok=True)
-    for i, (df, driver) in enumerate(zip(run_df, drivers)):
+    for i, df in enumerate(run_df):
         df.to_csv(f'{RUN_DIR}/{seed}_Run{i}.csv', index=False)
-        if f'TILK-E:{seed}' not in drivers_json:
-            drivers_json[f'TILK-E:{seed}'] = {}
-        drivers_json[f'TILK-E:{seed}'][f'{seed}_Run{i}.csv'] = driver
     
-    with open(DRIVERS_JSON_PATH, 'w') as f:
-        json.dump(drivers_json, f, indent=4, ensure_ascii=False)
 
+def times_dict(df: pd.DataFrame) -> dict:
+    """Calculate times."""
+    laptime = max(df.groupby('laps')['delta'].sum())
+    sectors = [
+        max(df[df['sector'] == sector].groupby('laps')['delta'].sum())
+        for sector in range(1, N_SECTORS + 1)
+    ]
+    microsectors = [
+        max(df[df['microsector'] == microsector].groupby('laps')['delta'].sum())
+        for microsector in range(1, N_MICROSECTORS + 1)
+    ]
+
+    return {
+        'laptime': laptime,
+        'sectors': sectors,
+        'microsectors': microsectors,
+    }
+
+def driver_best_times(df: pd.DataFrame, driver: str) -> dict:
+    """Calculate best times."""
+    df = df[df['driver'] == driver]
+    return times_dict(df)
+
+def run_info_dict(seed: int, runs_dfs_list: list[pd.DataFrame], drivers: list[str]) -> dict:
+    """Calculate run info."""
+    run_info = {
+        f'{seed}_Run{i}.csv': {
+            'driver': driver,
+            'laps': {lap: times_dict(lap_df) for lap, (_, lap_df) in enumerate(df.groupby('laps'))}
+        }
+        for i, (df, driver) in enumerate(zip(runs_dfs_list, drivers))
+    }
+
+    runs_drivers_dfs_list = []
+    for df, driver in zip(runs_dfs_list, drivers):
+        df['driver'] = driver
+        runs_drivers_dfs_list.append(df)
+    global_df = pd.concat(runs_drivers_dfs_list)
+    run_info['best_times'] = {
+        driver: driver_best_times(global_df, driver)
+        for driver in drivers
+    }
+    run_info['best_times']['global'] = times_dict(global_df)
+
+    return run_info
+
+    
 
 def __main__():
     parser = argparse.ArgumentParser(description='Generate data for DPA project using GRO & TILK-E.')
@@ -73,7 +124,8 @@ def __main__():
             continue
         print(f'Generating circuit {seed}')
         runs_dfs_list, drivers = generate_run(gates, circuit)
-        save_run(seed, runs_dfs_list, drivers)
+        run_info = run_info_dict(seed, runs_dfs_list, drivers)
+        save_run(seed, runs_dfs_list, run_info)
 
 if __name__ == '__main__':
     __main__()

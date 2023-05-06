@@ -6,23 +6,23 @@ import json
 from os import listdir
 from os.path import dirname, abspath, join, isfile
 
-from Modules import Run
+from Modules import Run, compute_sectors_deltas
+from Modules.circuit import CircuitChart
 from Modules.radarchart import RadarChart
 alt.data_transformers.disable_max_rows()
 
 
 # ---------- DATA LOADING ----------
-RUNS = ['proves_pilots']
-with open(join(dirname(abspath(__file__)), 'data', 'drivers.json'), 'r') as f:
-    DRIVERS = json.load(f)
+with open(join(dirname(abspath(__file__)), 'data', 'info.json'), 'r') as f:
+    INFO = json.load(f)
+RUNS = list(INFO.keys())
 RUN_OBJECTS_DICT = {}
 
 for run in RUNS:
     run_object = None
     for f in listdir(join(dirname(abspath(__file__)), 'data', run)):
         if isfile(join(dirname(abspath(__file__)), 'data', run, f)) and f.endswith('.csv'):
-            driver = DRIVERS[run][f]
-            new_run_object = Run(join(dirname(abspath(__file__)), 'data', run, f), driver)
+            new_run_object = Run(join(dirname(abspath(__file__)), 'data', run, f), INFO[run])
             run_object = new_run_object if run_object is None else run_object + new_run_object
 
     RUN_OBJECTS_DICT[run] = run_object
@@ -134,7 +134,17 @@ with lap_panel:
             )
 
             if sector == 'All sectors':
-                st.image("img/sectors.png", use_column_width=True)
+                # TODO: compare deltas between laps
+                circuit = CircuitChart(seed=int(run_selector.split(':')[1]), random_orientation=False)
+                sectors_delta = compute_sectors_deltas(
+                    info=RUN_OBJECTS_DICT[run_selector].info,
+                    filename=RUN_OBJECTS_DICT[run_selector].laps[lapA_selector].filename,
+                    lap=lapA_selector
+                    )
+                st.altair_chart(
+                    circuit.colored_sectors_chart(sectors_delta),
+                    use_container_width=True
+                )
 
             else:
                 sector_idx = int(sector[-1])
@@ -156,7 +166,18 @@ with lap_panel:
             )
 
             if microsector == 'All microsectors':
-                st.image("img/microsectors.png", use_column_width=True)
+                # TODO: compare deltas between laps
+                circuit = CircuitChart(seed=int(run_selector.split(':')[1]), random_orientation=False)
+                microsectors_delta = compute_sectors_deltas(
+                    info=RUN_OBJECTS_DICT[run_selector].info,
+                    filename=RUN_OBJECTS_DICT[run_selector].laps[lapA_selector].filename,
+                    lap=lapA_selector,
+                    microsectors=True
+                    )
+                st.altair_chart(
+                    circuit.colored_sectors_chart(microsectors_delta, microsectors=True),
+                    use_container_width=True
+                )
 
             else:
                 microsector_idx = int(microsector[-1])
