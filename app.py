@@ -6,7 +6,7 @@ import json
 from os import listdir
 from os.path import dirname, abspath, join, isfile
 
-from Modules import Run, compute_sectors_deltas
+from Modules import Run, compute_sectors_deltas, compute_sectors_comparison
 from Modules.circuit import CircuitChart
 from Modules.radarchart import RadarChart
 alt.data_transformers.disable_max_rows()
@@ -55,17 +55,20 @@ with selector_panel:
     with columns[1]:
         lapA_selector = st.selectbox(
             label = 'Select lap A',
-            options = range(len(RUN_OBJECTS_DICT[run_selector].laps)),
-            format_func = lambda x: f"Lap {x} [{RUN_OBJECTS_DICT[run_selector].laps[x].driver}]",
+            options = ['<select>'] + list(range(len(RUN_OBJECTS_DICT[run_selector].laps))),
+            format_func = lambda x: f"Lap {x} [{RUN_OBJECTS_DICT[run_selector].laps[x].driver}]" if x != '<select>' else x,
             index=0
         )
     
     with columns[2]:
+        lapB_options = set(range(len(RUN_OBJECTS_DICT[run_selector].laps))) - (set([int(lapA_selector)]) if lapA_selector != '<select>' else set())
+        lapB_options = ['<select>'] + list(lapB_options)
         lapB_selector = st.selectbox(
             'Select lap B',
-            options = range(len(RUN_OBJECTS_DICT[run_selector].laps)),
-            format_func = lambda x: f"Lap {x} [{RUN_OBJECTS_DICT[run_selector].laps[x].driver}]",
-            index=1
+            options = lapB_options,
+            format_func = lambda x: f"Lap {x} [{RUN_OBJECTS_DICT[run_selector].laps[x].driver}]" if x != '<select>' else x,
+            index=0,
+            disabled = True if lapA_selector == '<select>' else False
         )
     
 # ---------- RUN PANEL ----------
@@ -110,8 +113,13 @@ with run_panel:
             st.altair_chart(radar.chart.properties(height = 400), use_container_width=True)
 
     with smoothness_panel:
-        throttle_smoothness_chart = RUN_OBJECTS_DICT[run_selector].throttle_smoothness_chart()
-        steering_smoothness_chart = RUN_OBJECTS_DICT[run_selector].steering_smoothness_chart()
+        if lapA_selector == '<select>':
+            throttle_smoothness_chart = RUN_OBJECTS_DICT[run_selector].throttle_smoothness_chart()
+            steering_smoothness_chart = RUN_OBJECTS_DICT[run_selector].steering_smoothness_chart()
+        else:
+            lap_numbers = [lapA_selector, lapB_selector] if lapB_selector != '<select>' else [int(lapA_selector)]
+            throttle_smoothness_chart = RUN_OBJECTS_DICT[run_selector].throttle_smoothness_chart(laps=lap_numbers)
+            steering_smoothness_chart = RUN_OBJECTS_DICT[run_selector].steering_smoothness_chart(laps=lap_numbers)
 
         st.altair_chart(throttle_smoothness_chart.properties(height=250), use_container_width=True)
         st.altair_chart(steering_smoothness_chart.properties(height=250), use_container_width=True)
@@ -136,15 +144,33 @@ with lap_panel:
             if sector == 'All sectors':
                 # TODO: compare deltas between laps
                 circuit = CircuitChart(seed=int(run_selector.split(':')[1]), random_orientation=False)
-                sectors_delta = compute_sectors_deltas(
-                    info=RUN_OBJECTS_DICT[run_selector].info,
-                    filename=RUN_OBJECTS_DICT[run_selector].laps[lapA_selector].filename,
-                    lap=lapA_selector
+                if lapA_selector == '<select>':
+                    st.altair_chart(
+                        circuit.track_chart(),
+                        use_container_width=True
                     )
-                st.altair_chart(
-                    circuit.colored_sectors_chart(sectors_delta),
-                    use_container_width=True
-                )
+                elif lapB_selector == '<select>':
+                    sectors_delta = compute_sectors_deltas(
+                        info=RUN_OBJECTS_DICT[run_selector].info,
+                        filename=RUN_OBJECTS_DICT[run_selector].laps[int(lapA_selector)].filename,
+                        lap=lapA_selector
+                        )
+                    st.altair_chart(
+                        circuit.colored_sectors_chart(sectors_delta),
+                        use_container_width=True
+                    )
+                else:
+                    sectors_comparison = compute_sectors_comparison(
+                        info=RUN_OBJECTS_DICT[run_selector].info,
+                        filenameA=RUN_OBJECTS_DICT[run_selector].laps[int(lapA_selector)].filename,
+                        lapA=lapA_selector,
+                        filenameB=RUN_OBJECTS_DICT[run_selector].laps[int(lapB_selector)].filename,
+                        lapB=lapB_selector
+                        )
+                    st.altair_chart(
+                        circuit.colored_sectors_chart(sectors_comparison),
+                        use_container_width=True
+                    )
 
             else:
                 sector_idx = int(sector[-1])
@@ -154,7 +180,7 @@ with lap_panel:
                     st.image("img/turn.png", use_column_width=True)
                 
                 with sector_gg_diagram:
-                    gg_diagram = RUN_OBJECTS_DICT[run_selector].laps[lapA_selector].gg_diagram() + RUN_OBJECTS_DICT[run_selector].laps[lapB_selector].gg_diagram()
+                    gg_diagram = RUN_OBJECTS_DICT[run_selector].laps[int(lapA_selector)].gg_diagram() + RUN_OBJECTS_DICT[run_selector].laps[int(lapB_selector)].gg_diagram()
                     st.altair_chart(gg_diagram, use_container_width=True)
 
         with microsectors:
@@ -168,16 +194,35 @@ with lap_panel:
             if microsector == 'All microsectors':
                 # TODO: compare deltas between laps
                 circuit = CircuitChart(seed=int(run_selector.split(':')[1]), random_orientation=False)
-                microsectors_delta = compute_sectors_deltas(
-                    info=RUN_OBJECTS_DICT[run_selector].info,
-                    filename=RUN_OBJECTS_DICT[run_selector].laps[lapA_selector].filename,
-                    lap=lapA_selector,
-                    microsectors=True
+                if lapA_selector == '<select>':
+                    st.altair_chart(
+                        circuit.track_chart(microsectors=True),
+                        use_container_width=True
                     )
-                st.altair_chart(
-                    circuit.colored_sectors_chart(microsectors_delta, microsectors=True),
-                    use_container_width=True
-                )
+                elif lapB_selector == '<select>':
+                    microsectors_delta = compute_sectors_deltas(
+                        info=RUN_OBJECTS_DICT[run_selector].info,
+                        filename=RUN_OBJECTS_DICT[run_selector].laps[int(lapA_selector)].filename,
+                        lap=lapA_selector,
+                        microsectors=True
+                        )
+                    st.altair_chart(
+                        circuit.colored_sectors_chart(microsectors_delta, microsectors=True),
+                        use_container_width=True
+                    )
+                else:
+                    microsectors_comparison = compute_sectors_comparison(
+                        info=RUN_OBJECTS_DICT[run_selector].info,
+                        filenameA=RUN_OBJECTS_DICT[run_selector].laps[int(lapA_selector)].filename,
+                        lapA=lapA_selector,
+                        filenameB=RUN_OBJECTS_DICT[run_selector].laps[int(lapB_selector)].filename,
+                        lapB=lapB_selector,
+                        microsectors=True
+                        )
+                    st.altair_chart(
+                        circuit.colored_sectors_chart(microsectors_comparison, microsectors=True),
+                        use_container_width=True
+                    )
 
             else:
                 microsector_idx = int(microsector[-1])
@@ -187,7 +232,7 @@ with lap_panel:
                     st.image("img/turn.png", use_column_width=True)
                 
                 with microsector_gg_diagram:
-                    gg_diagram = RUN_OBJECTS_DICT[run_selector].laps[lapA_selector].gg_diagram() + RUN_OBJECTS_DICT[run_selector].laps[lapB_selector].gg_diagram()
+                    gg_diagram = RUN_OBJECTS_DICT[run_selector].laps[int(lapA_selector)].gg_diagram() + RUN_OBJECTS_DICT[run_selector].laps[int(lapB_selector)].gg_diagram()
                     st.altair_chart(gg_diagram, use_container_width=True)
 
 # ---------- FOOTER ----------

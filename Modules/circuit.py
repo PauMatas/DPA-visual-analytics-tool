@@ -92,6 +92,64 @@ class CircuitChart(Circuit):
         )
         return chart
     
+    def track_chart(self, microsectors: bool = False) -> alt.Chart:
+        """Charts the circuit layout with the sectors and microsectors
+
+        Arguments:
+            self (Circuit) : the object itself
+            microsectors (bool) : if true colors the microsectors instead of the sectors
+        Returns:
+            chart (alt.Chart) : the chart of the circuit layout with the sectors and microsectors
+        """
+
+        df = pd.DataFrame(columns=["x", "y", "sector", "index", "curve"])
+        doors_json = []
+
+        for track_name, track in {"middle": self.middle_curve}.items():
+            start = track.t[0]
+            end = track.t[-1]
+            precision = 1000
+            sectors = self.N_MICROSECTORS if microsectors else self.N_SECTORS
+            curve_df = pd.DataFrame(columns=["x", "y", "sector", "index"])
+
+            for i in range(sectors):
+                sector_start = start if i == 0 else end * i/sectors
+                sector_end = end * (i+1)/sectors
+                sector = np.linspace(sector_start, sector_end, num=precision//sectors)
+                gamma = track(sector)
+                sector_df = pd.DataFrame(gamma, columns=["x", "y"])
+                sector_df["index"] = sector_df.index
+                sector_df["sector"] = i + 1
+                curve_df = pd.concat([curve_df, sector_df])
+
+            curve_df["curve"] = track_name
+            df = pd.concat([df, curve_df])
+
+        for track_name, track in {"interior": self.interior_curve, "exterior": self.exterior_curve}.items():
+            doors = [track(track.t[-1] * (i+1)/(self.N_MICROSECTORS if microsectors else self.N_SECTORS)) for i in range((self.N_MICROSECTORS if microsectors else self.N_SECTORS))]
+            doors_json += [{
+                "x": door[0],
+                "y": door[1],
+                "sector": i + 1,
+            } for i, door in enumerate(doors)]
+        doors_df = pd.DataFrame(doors_json)
+
+        return alt.Chart(df).mark_line().encode(
+            x=alt.X("x", axis=None),
+            y=alt.Y("y", axis=None),
+            order="index",
+            detail=alt.Detail(["sector:N", "curve:N"]),
+            strokeWidth=alt.value(10),
+            strokeOpacity=alt.value(0.5),
+            color=alt.value("grey"),
+            tooltip=["sector:N"],
+        ) + alt.Chart(doors_df).mark_line().encode(
+            x=alt.X("x", axis=None),
+            y=alt.Y("y", axis=None),
+            detail="sector:N",
+            color=alt.value("black"),
+        )
+    
     def set_sectors(self):
         """Sets the sectors of the circuit"""
         self.sector_doors = [self.middle_curve(self.middle_curve.t[-1] * (i+1)/self.N_SECTORS) for i in range(self.N_SECTORS)]
@@ -145,7 +203,8 @@ class CircuitChart(Circuit):
             y=alt.Y("y", axis=None),
             color=alt.Color(
                 "delta:N",
-                scale=alt.Scale(range=["purple", "green", "yellow"], domain=["best", "personal_best", "other"])
+                scale=alt.Scale(range=["purple", "green", "yellow", '#4E79A7', '#F28E2B'], domain=["best", "personal_best", "other", "lapA", "lapB"]),
+                legend=None
             ),
             order="index",
             detail=alt.Detail(["curve:N", "sector:N"]),

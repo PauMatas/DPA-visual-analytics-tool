@@ -44,19 +44,19 @@ class Run:
         return sum
 
 
-    def steering_smoothness_chart(self) -> alt.Chart:
+    def steering_smoothness_chart(self, laps: list[int] = None) -> alt.Chart:
         steering_json = [
             {'smoothness': lap.steering.smoothness, 'lap': lap.number, 'laptime': lap.laptime, 'driver': lap.driver}
-            for lap in self.laps
+            for lap in (self.laps if laps is None else [self.laps[i] for i in laps])
             if lap.laptime is not None
         ]
         chart = self._smoothness_chart(pd.DataFrame(steering_json))
         return chart.properties(title='Steering smoothness')
     
-    def throttle_smoothness_chart(self) -> alt.Chart:
+    def throttle_smoothness_chart(self, laps: list[int] = None) -> alt.Chart:
         throttle_json = [
             {'smoothness': lap.throttle.smoothness, 'lap': lap.number, 'laptime': lap.laptime, 'driver': lap.driver}
-            for lap in self.laps
+            for lap in (self.laps if laps is None else [self.laps[i] for i in laps])
             if lap.laptime is not None
         ]
         chart = self._smoothness_chart(pd.DataFrame(throttle_json))
