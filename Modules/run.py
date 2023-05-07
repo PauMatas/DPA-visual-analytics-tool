@@ -6,7 +6,7 @@ from os.path import basename
 from .lap import Lap
 
 class Run:
-    COLUMNS = ['TimeStamp', 'Throttle', 'Steering', 'VN_ax', 'VN_ay', 'xPosition', 'yPosition', 'zPosition', 'Velocity', 'laps', 'delta', 'dist1', 'BPE']
+    COLUMNS = ['TimeStamp', 'Throttle', 'Steering', 'VN_ax', 'VN_ay', 'xPosition', 'yPosition', 'zPosition', 'Velocity', 'laps', 'delta', 'dist1', 'BPE', 'sector', 'microsector']
 
     def __init__(self, csv: str | None | pd.DataFrame = None, info: dict = None, filename: str = None) -> None:
         if info is not None:

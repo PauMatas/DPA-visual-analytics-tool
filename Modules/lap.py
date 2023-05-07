@@ -97,6 +97,27 @@ class Lap:
             color=alt.Color('laps:N', scale=alt.Scale(scheme='tableau10')),
             tooltip=['TimeStamp', 'VN_ax', 'VN_ay']
         )
+    
+    def racing_line_df(self, curve_name: str = 'middle', sector: int = None, microsectors: bool = False) -> pd.DataFrame:
+        if sector is None:
+            df = pd.DataFrame({
+                'x': self.df['xPosition'],
+                'y': self.df['yPosition'],
+            })
+        elif microsectors:
+            df = pd.DataFrame({
+                'x': self.df[self.df['microsector'] == sector]['xPosition'],
+                'y': self.df[self.df['microsector'] == sector]['yPosition'],
+            })
+        else:
+            df = pd.DataFrame({
+                'x': self.df[self.df['sector'] == sector]['xPosition'],
+                'y': self.df[self.df['sector'] == sector]['yPosition'],
+            })
+
+        df['curve'] = curve_name
+        df['index'] = df.index
+        return df
 
     def __repr__(self) -> str:
         return f"[Lap {self.number}] -> {self.driver}"

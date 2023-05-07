@@ -5,7 +5,7 @@ import altair as alt
 from tilke import Circuit, Spline
 
 
-def spline_chart_df(spline: Spline, precision: int = 1000, showcones: bool = True, curve_name: str = "N/D") -> tuple[pd.DataFrame]:
+def spline_chart_df(spline: Spline | np.ndarray, precision: int = 1000, showcones: bool = True, curve_name: str = "N/D") -> tuple[pd.DataFrame]:
         """Plots a given spline with it's highlighted points and true cones
 
         Arguments:
@@ -19,29 +19,28 @@ def spline_chart_df(spline: Spline, precision: int = 1000, showcones: bool = Tru
             pd.DataFrame : dataframe containing the curve
             pd.DataFrame : dataframe containing the cones
         """
-        tt = np.linspace(spline.t[0], spline.t[-1], precision)
-        gamma = spline(tt)
+        if isinstance(spline, Spline):
+            tt = np.linspace(spline.t[0], spline.t[-1], precision)
+            gamma = spline(tt)
+        elif isinstance(spline, np.ndarray):
+            gamma = spline
         lines_df = pd.DataFrame(gamma, columns=["x", "y"])
         lines_df['index'] = lines_df.index
         lines_df['curve'] = curve_name
-
-        cones_df = pd.DataFrame(columns=["x", "y", "type", "curve"])
-        points_df = pd.DataFrame(columns=["x", "y", "type", "curve"])
-        if len(spline.true_cones) > 0 and showcones:
-            hc = np.array([spline(c) for c in spline.true_cones])
-            cones_df = pd.DataFrame(hc, columns=["x", "y"])
-            cones_df['type'] = 'cone'
-            cones_df['curve'] = curve_name
-            
-        if len(spline.highlighted_points) > 0:
-            hp = np.array([spline(t) for t in spline.highlighted_points])
-            points_df = pd.DataFrame(hp, columns=["x", "y"])
-            points_df['type'] = 'point'
-            points_df['curve'] = curve_name
-
-        circles_df = pd.concat([cones_df, points_df])
         
-        return lines_df, circles_df
+        return lines_df
+
+def sector_spline(spline: Spline, sector: int, microsectors: bool, precision: int = None) -> np.ndarray:
+    if precision is None:
+        precision = 1000 // (CircuitChart.N_MICROSECTORS if microsectors else CircuitChart.N_SECTORS)
+    if sector is None:
+        return spline
+    
+    sector_start = spline.t[-1] * sector / (CircuitChart.N_MICROSECTORS if microsectors else CircuitChart.N_SECTORS)
+    sector_end = spline.t[-1] * (sector+1) / (CircuitChart.N_MICROSECTORS if microsectors else CircuitChart.N_SECTORS)
+    sector = np.linspace(sector_start, sector_end, precision)
+    gamma = spline(sector)
+    return gamma
 
 
 class CircuitChart(Circuit):
@@ -52,42 +51,40 @@ class CircuitChart(Circuit):
         super().__init__(*args, **kwargs)
         self.set_sectors()
 
-    def chart(self, middle_curve_df: pd.DataFrame = None, important_points: pd.DataFrame = None) -> alt.Chart:
+    def chart(self, middle_curve_df: pd.DataFrame = None, important_points: pd.DataFrame = None, sector: int = None, microsectors: bool = False) -> alt.Chart:
         """Charts the circuit layout
 
         Arguments:
             self (Circuit) : the object itself
             middle_curve_df (pd.DataFrame) : the dataframe containing the middle curve
+            important_points (pd.DataFrame) : the dataframe containing the important points
+            sector (int) : the sector to be plotted
+            microsectors (bool) : if true plots the microsectors
         Returns:
             chart (alt.Chart) : the chart of the circuit layout
         """
         curve_options = {
-            "interior": self.interior_curve,
-            "exterior": self.exterior_curve,
+            "interior": sector_spline(self.interior_curve, sector=sector, microsectors=microsectors),
+            "exterior": sector_spline(self.exterior_curve, sector=sector, microsectors=microsectors),
         }
         if middle_curve_df is None:
-            curve_options["middle"] = self.middle_curve
+            curve_options["middle"] = sector_spline(self.middle_curve, sector=sector, microsectors=microsectors)
 
         lines_df = pd.DataFrame(columns=["x", "y", "curve", "index"]) if middle_curve_df is None else middle_curve_df
-        circles_df = pd.DataFrame(columns=["x", "y", "type", "curve"]) if important_points is None else important_points
         for curve_name, curve in curve_options.items():
             if curve is not None:
-                aux_lines_df, aux_circles_df = spline_chart_df(curve, curve_name=curve_name)
-                lines_df = pd.concat([lines_df, aux_lines_df])
-                circles_df = pd.concat([circles_df, aux_circles_df])
+                lines_df = pd.concat([lines_df, spline_chart_df(curve, curve_name=curve_name)])
 
         chart = (
             alt.Chart(lines_df).mark_line().encode(
                 x=alt.X("x:Q", axis=None),
                 y=alt.Y("y:Q", axis=None),
-                color=alt.Color("curve:N", legend=None),
+                color=alt.Color("curve:N", scale=alt.Scale(
+                    range=['black', 'grey', 'black', '#4E79A7', '#F28E2B'],
+                    domain=['interior', 'middle', 'exterior', 'lapA', 'lapB']),
+                    legend=None),
                 order="index:O",
-            ) + 
-            alt.Chart(circles_df).mark_circle().encode(
-                x=alt.X("x:Q", axis=None),
-                y=alt.Y("y:Q", axis=None),
-                shape=alt.Shape("type:N", legend=None),
-                color=alt.Color("curve:N", legend=None),
+                detail="curve:N",
             )
         )
         return chart
