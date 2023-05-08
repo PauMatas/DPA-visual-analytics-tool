@@ -5,6 +5,8 @@ import numpy as np
 import json
 from os import listdir
 from os.path import dirname, abspath, join, isfile
+import vegafusion as vf
+vf.enable()
 
 from Modules import Run, compute_sectors_deltas, compute_sectors_comparison
 from Modules.circuit import CircuitChart
@@ -72,6 +74,12 @@ with selector_panel:
         )
     
 # ---------- RUN PANEL ----------
+try:
+    with open(join(dirname(abspath(__file__)), 'data', run_selector, 'turns.json'), 'r') as f:
+        turns_json = json.load(f)
+except FileNotFoundError:
+    turns_json = None
+
 with run_panel:
     radars_panel, smoothness_panel = st.columns([5,2])
     with radars_panel:
@@ -131,7 +139,7 @@ with lap_panel:
         st.image("img/livegap.png", use_column_width=True)
 
     with track:
-        sectors, microsectors = st.tabs(['Sectors', 'Microsectors'])
+        sectors, microsectors, turns = st.tabs(['Sectors', 'Microsectors', 'Turns'])
         circuit = CircuitChart(seed=int(run_selector.split(':')[1]), random_orientation=False)
 
         with sectors:
@@ -253,6 +261,14 @@ with lap_panel:
                         if lapB_selector != '<select>':
                             gg_diagram += RUN_OBJECTS_DICT[run_selector].laps[int(lapB_selector)].gg_diagram()
                         st.altair_chart(gg_diagram, use_container_width=True)
+
+        with turns:
+            if turns_json is None:
+                st.write('No turns data available, please build the turns data for this run first.')
+            else:
+                st.altair_chart(
+                    circuit.turns_chart(turns_json=turns_json)
+                )
 
 # ---------- FOOTER ----------
 st.markdown('<style>h1{color: red;}</style>',

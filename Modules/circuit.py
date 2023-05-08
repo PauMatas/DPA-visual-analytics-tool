@@ -214,3 +214,59 @@ class CircuitChart(Circuit):
                 alt.value(0.5),
                 alt.value(1))  
         )
+    
+    def turns_chart(self, turns_json: list[dict]) -> alt.Chart:
+        """Charts the circuit layout with the turns highlighted
+
+        Arguments:
+            self (Circuit) : the object itself
+            turns_json (list[dict]) : the info of which microsectors comprend the turns
+        Returns:
+            chart (alt.Chart) : the chart of the circuit layout with the turns
+        """
+        track_name = "middle"
+        track = self.middle_curve
+        legend_values = [turn["name"] for turn in turns_json]
+
+        df = pd.DataFrame(columns=["x", "y", "turn", "sector", "index", "curve"])
+
+        start = track.t[0]
+        end = track.t[-1]
+        precision = 1000
+        curve_df = pd.DataFrame(columns=["x", "y", "turn", "sector", "index"])
+        if not turns_json:
+            raise ValueError("There has to be at least one turn in the turns_json list")
+        current_turn = turns_json.pop(0)
+
+        for i in range(self.N_MICROSECTORS):
+            sector_start = start if i == 0 else end * i/self.N_MICROSECTORS
+            sector_end = end * (i+1)/self.N_MICROSECTORS
+            sector = np.linspace(sector_start, sector_end, num=precision//self.N_MICROSECTORS)
+            gamma = track(sector)
+            sector_df = pd.DataFrame(gamma, columns=["x", "y"])
+            sector_df["index"] = sector_df.index
+            sector_df["sector"] = i + 1
+            if i + 1 >= current_turn["first_ms"] and i + 1 <= current_turn["last_ms"]:
+                sector_df["turn"] = current_turn["name"]
+            else:
+                sector_df["turn"] = None
+            if i + 1 == current_turn["last_ms"] and turns_json:
+                    current_turn = turns_json.pop(0)
+            curve_df = pd.concat([curve_df, sector_df])
+
+        curve_df["curve"] = track_name
+        df = pd.concat([df, curve_df])
+
+        return alt.Chart(df).mark_line().encode(
+            x=alt.X("x", axis=None),
+            y=alt.Y("y", axis=None),
+            color=alt.condition(
+                alt.datum.turn != None,
+                alt.Color("turn:N", legend=alt.Legend(title="Turns", values=legend_values)),
+                alt.value("grey")
+            ),
+            order="index",
+            detail=alt.Detail(["curve:N", "sector:N"]),
+            strokeWidth=alt.value(10),
+            strokeOpacity=alt.value(0.5), 
+        )
