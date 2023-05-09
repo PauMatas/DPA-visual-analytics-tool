@@ -4,6 +4,8 @@ import numpy as np
 from os.path import basename
 
 from .lap import Lap
+from .breaking import get_breaking_stats
+from .radarchart import RadarChart
 
 class Run:
     COLUMNS = ['TimeStamp', 'Throttle', 'Steering', 'VN_ax', 'VN_ay', 'xPosition', 'yPosition', 'zPosition', 'Velocity', 'laps', 'delta', 'dist1', 'BPE', 'sector', 'microsector']
@@ -70,20 +72,13 @@ class Run:
             tooltip=['lap', 'laptime', 'driver']
         )
     
-    def breaking_points_chart(self) -> alt.Chart:
-        breaking_points = self.breaking_points()
-        chart = alt.Chart(pd.DataFrame(breaking_points)).mark_line().encode(
-            y='mean(breaking_point):Q',
-            x='breaking zone:N',
-            color='driver:N',
-            tooltip=['breaking_point', 'driver']
-        )
-        return chart.properties(title='Breaking points')
-    
-    def breaking_points(self) -> list:
-        # TODO: determine the braking zones and the breaking points for each lap and brake zone
-        # options:
-        # - clustering algorithm to determine the zones (problem: if a driver brakes two times in the same zone, it will be counted as the furthest one)
-        # - determine the zones by hand
-        # - idk
-        return []
+    def breaking_charts(self, turns_json: list[dict], chart_sections: int = 4, laps: list = None) -> tuple[alt.Chart]:
+        if laps is None:
+            laps = [lap.number for lap in self.laps]
+        radars = []
+        axis_names, axis_idxs, lines, mean_v, out_v, distance_before_breaking = get_breaking_stats(turns_json, laps, self.df)
+        for metric in [mean_v, out_v, distance_before_breaking]:
+            df = pd.DataFrame({'axis_name': axis_names, 'axis': axis_idxs, 'line': lines, 'metric': metric})
+            radars.append(RadarChart(df, chart_sections).chart)
+        
+        return tuple(radars)

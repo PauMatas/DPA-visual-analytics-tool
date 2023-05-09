@@ -22,9 +22,8 @@ class RadarChart:
         """
         self.df = df
         self.n_ticks = n_ticks
-        self.domain = kwargs.get('domain', [-100, 100])
-        self.width = kwargs.get('width', 400)
-        self.height = kwargs.get('height', 400)
+        self.width = kwargs.get('width', 250)
+        self.height = kwargs.get('height', 250)
 
         assert(self.df.axis.min() == 0)
         assert(self.df.line.min() == 0)
@@ -81,9 +80,12 @@ class RadarChart:
             dx=self.max_value * alt.datum.cos,
             dy=self.max_value * alt.datum.sin
         ).mark_line(strokeWidth=0, fillOpacity=0.1, fill='gray').encode(
-            x=alt.X("dx:Q", scale=alt.Scale(domain=self.domain), axis=None),
-            y=alt.Y("dy:Q", scale=alt.Scale(domain=self.domain), axis=None),
+            x=alt.X("dx:Q", axis=None),
+            y=alt.Y("dy:Q", axis=None),
             order="axis:Q"
+        ).properties(
+            width=self.width,
+            height=self.height
         )
     
     def _background_lines(self):
@@ -96,9 +98,12 @@ class RadarChart:
                 dx= i * alt.datum.cos,
                 dy= i * alt.datum.sin
             ).mark_line(strokeDash=[5, 5], strokeWidth=1, strokeOpacity=0.5, color='gray').encode(
-                x=alt.X("dx:Q", scale=alt.Scale(domain=self.domain), axis=None),
-                y=alt.Y("dy:Q", scale=alt.Scale(domain=self.domain), axis=None),
+                x=alt.X("dx:Q", axis=None),
+                y=alt.Y("dy:Q", axis=None),
                 order="axis:Q"
+            ).properties(
+                width=self.width,
+                height=self.height
             )
             
         return lines
@@ -116,9 +121,12 @@ class RadarChart:
                 dx=(alt.datum.axis == axis) * (self.max_value * alt.datum.cos),
                 dy=(alt.datum.axis == axis) * (self.max_value * alt.datum.sin)
             ).mark_line(strokeWidth=1, strokeOpacity = 0.5, color="black").encode(
-                x=alt.X("dx:Q", scale=alt.Scale(domain=self.domain), axis=None),
-                y=alt.Y("dy:Q", scale=alt.Scale(domain=self.domain), axis=None),
+                x=alt.X("dx:Q", axis=None),
+                y=alt.Y("dy:Q", axis=None),
                 order="axis:Q"
+            ).properties(
+                width=self.width,
+                height=self.height
             )
         return radii
 
@@ -130,10 +138,13 @@ class RadarChart:
             dy=alt.datum.metric * alt.datum.sin,
             text=alt.datum.metric
         ).mark_text(fontStyle="bold", color="black").encode(
-            x=alt.X("dx:Q", scale=alt.Scale(domain=self.domain), axis=None),
-            y=alt.Y("dy:Q", scale=alt.Scale(domain=self.domain), axis=None),
+            x=alt.X("dx:Q", axis=None),
+            y=alt.Y("dy:Q", axis=None),
             order="axis:Q",
             text="metric:Q"
+        ).properties(
+            width=self.width,
+            height=self.height
         )
     
     def _axis_labels(self):
@@ -144,10 +155,13 @@ class RadarChart:
             dy=(self.max_value * alt.datum.sin + alt.datum.sin) * 1.1,
             text=alt.datum.axis
         ).mark_text(fontStyle="bold").encode(
-            x=alt.X("dx:Q", scale=alt.Scale(domain=self.domain), axis=None),
-            y=alt.Y("dy:Q", scale=alt.Scale(domain=self.domain), axis=None),
+            x=alt.X("dx:Q", axis=None),
+            y=alt.Y("dy:Q", axis=None),
             order="axis:Q",
             text="axis_name"
+        ).properties(
+            width=self.width,
+            height=self.height
         )
     
     def _radar_chart(self, line):
@@ -157,10 +171,13 @@ class RadarChart:
             dx=alt.datum.metric * alt.datum.cos,
             dy=alt.datum.metric * alt.datum.sin,
         ).mark_line(strokeWidth=2, strokeOpacity=1, color=COLORS[line]).encode(
-            x=alt.X("dx:Q", scale=alt.Scale(domain=self.domain), axis=None),
-            y=alt.Y("dy:Q", scale=alt.Scale(domain=self.domain), axis=None),
+            x=alt.X("dx:Q", axis=None),
+            y=alt.Y("dy:Q", axis=None),
             order="axis",
             tooltip="metric:Q"
+        ).properties(
+            width=self.width,
+            height=self.height
         )
     
     def _radars_chart(self):

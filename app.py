@@ -10,7 +10,6 @@ vf.enable()
 
 from Modules import Run, compute_sectors_deltas, compute_sectors_comparison
 from Modules.circuit import CircuitChart
-from Modules.radarchart import RadarChart
 alt.data_transformers.disable_max_rows()
 
 
@@ -81,44 +80,28 @@ except FileNotFoundError:
     turns_json = None
 
 with run_panel:
-    radars_panel, smoothness_panel = st.columns([5,2])
+    radars_panel, smoothness_panel = st.columns(2)
     with radars_panel:
-        columns = st.columns(3)
+        if lapA_selector == '<select>':
+            mean_v_chart, out_v_chart, breaking_point_chart = RUN_OBJECTS_DICT[run_selector].breaking_charts(turns_json)
+        else:
+            lap_numbers = [int(lapA_selector), int(lapB_selector)] if lapB_selector != '<select>' else [int(lapA_selector)]
+            mean_v_chart, out_v_chart, breaking_point_chart = RUN_OBJECTS_DICT[run_selector].breaking_charts(turns_json, laps=lap_numbers)
+        
+        columns = st.columns(2)
         with columns[0]:
-            st.write('Braking Distance to the apex')
-            df_dict = []
-            for lap in range(2):
-                for turn in range(7): # 7 turns
-                    meters = max(5, (np.random.uniform(0, ((turn%4)+1)*20)+np.random.randint(10)))
-                    df_dict.append({'axis_name': f'Turn {turn+1}', 'axis': turn, 'line': lap, 'metric': meters})
-            df = pd.DataFrame(df_dict)
-
-            radar = RadarChart(df, 4)
-            st.altair_chart(radar.chart.properties(height = 300), use_container_width=True)
+            st.write('Average Speed per turn')
+            st.altair_chart(mean_v_chart)
         
         with columns[1]:
-            st.write('Average Speed per turn')
-            df_dict = []
-            for lap in range(2):
-                for turn in range(7): # 7 turns
-                    meters = max(5, (np.random.uniform(0, ((turn%4)+1)*20)+np.random.randint(10)))
-                    df_dict.append({'axis_name': f'Turn {turn+1}', 'axis': turn, 'line': lap, 'metric': meters})
-            df = pd.DataFrame(df_dict)
-
-            radar = RadarChart(df, 4)
-            st.altair_chart(radar.chart.properties(height = 300), use_container_width=True)
-
-        with columns[2]:
             st.write('Speed at the end of the turn')
-            df_dict = []
-            for lap in range(2):
-                for turn in range(7): # 7 turns
-                    meters = max(5, (np.random.uniform(0, ((turn%4)+1)*20)+np.random.randint(10)))
-                    df_dict.append({'axis_name': f'Turn {turn+1}', 'axis': turn, 'line': lap, 'metric': meters})
-            df = pd.DataFrame(df_dict)
+            st.altair_chart(out_v_chart)
 
-            radar = RadarChart(df, 4)
-            st.altair_chart(radar.chart.properties(height = 400), use_container_width=True)
+        # breaking point chart centered in the middle of the container
+        _, column, _ = st.columns([1,3,1])
+        with column:
+            st.write('Breaking point')
+            st.altair_chart(breaking_point_chart)
 
     with smoothness_panel:
         if lapA_selector == '<select>':
@@ -129,8 +112,8 @@ with run_panel:
             throttle_smoothness_chart = RUN_OBJECTS_DICT[run_selector].throttle_smoothness_chart(laps=lap_numbers)
             steering_smoothness_chart = RUN_OBJECTS_DICT[run_selector].steering_smoothness_chart(laps=lap_numbers)
 
-        st.altair_chart(throttle_smoothness_chart.properties(height=250), use_container_width=True)
-        st.altair_chart(steering_smoothness_chart.properties(height=250), use_container_width=True)
+        st.altair_chart(throttle_smoothness_chart.properties(height=300), use_container_width=True)
+        st.altair_chart(steering_smoothness_chart.properties(height=300), use_container_width=True)
 
 # ---------- LAP PANEL ----------
 with lap_panel:
@@ -269,10 +252,3 @@ with lap_panel:
                 st.altair_chart(
                     circuit.turns_chart(turns_json=turns_json)
                 )
-
-# ---------- FOOTER ----------
-st.markdown('<style>h1{color: red;}</style>',
-            unsafe_allow_html=True)
-
-st.title('DPA Visualization Tool')
-st.dataframe(RUN_OBJECTS_DICT[run_selector].df)
