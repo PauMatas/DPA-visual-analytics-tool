@@ -2,6 +2,9 @@ import pandas as pd
 import altair as alt
 import numpy as np
 from os.path import basename
+from sklearn.neighbors import KDTree
+
+from tilke import Circuit
 
 from .lap import Lap
 from .breaking import get_breaking_stats
@@ -68,7 +71,7 @@ class Run:
         return alt.Chart(df).mark_point().encode(
             y='laptime:Q',
             x = 'smoothness:Q',
-            color = 'lap:N',
+            color = alt.Color('lap:N', scale=alt.Scale(scheme='tableau10')),
             shape='driver:N',
             tooltip=['lap', 'laptime', 'driver']
         )
@@ -83,3 +86,32 @@ class Run:
             radars.append(RadarChart(df, chart_sections).chart)
         
         return tuple(radars)
+    
+    def laps_delta_comparison_chart(self, circuit: Circuit,  lapA: int, lapB: int, intervals: int = 100) -> alt.Chart:
+        lapA_kdtree = KDTree(self.laps[lapA].df[['xPosition', 'yPosition']])
+        lapB_kdtree = KDTree(self.laps[lapB].df[['xPosition', 'yPosition']])
+
+        delta = []
+        for i in range(intervals):
+            door = circuit.middle_curve(circuit.middle_curve.t[-1] * (i+1)/intervals)
+            Ai = lapA_kdtree.query([door])[0][0]
+            Bi = lapB_kdtree.query([door])[0][0]
+            delta.append(self.laps[lapA].df.iloc[Ai]['TimeStamp'].values[0] - self.laps[lapB].df.iloc[Bi]['TimeStamp'].values[0])
+
+        data = pd.DataFrame({
+            'delta': delta,
+            'bin': list(range(intervals)),
+            'color': ['lapA' if d > 0 else 'lapB' for d in delta]
+        })
+
+        return alt.Chart(data).mark_bar().encode(
+            x=alt.X('delta:Q', scale=alt.Scale(domain=[-1, 1])),
+            y=alt.Y('bin:Q', axis=None),
+            color=alt.condition(
+                alt.datum.delta != 0,
+                alt.Color('color:N', legend=None, scale=alt.Scale(scheme='tableau10')),
+                alt.value('yellow')
+            ),
+            order='bin:Q',
+            tooltip=['delta:Q']
+        )

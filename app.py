@@ -37,7 +37,7 @@ st.set_page_config(
 )
 
 # ---------- HEADER ----------
-st.header('DPA Visualization Tool Header')
+st.title('DPA Visualization Tool Header')
 
 # ---------- SELECTORS ----------
 selector_panel = st.container()
@@ -117,14 +117,22 @@ with run_panel:
 
 # ---------- LAP PANEL ----------
 with lap_panel:
+    circuit = CircuitChart(seed=int(run_selector.split(':')[1]), random_orientation=False)
+    
     video, track = st.columns([1,3])
     with video:
-        st.image("img/livegap.png", use_column_width=True)
+        if lapA_selector == '<select>' or lapB_selector == '<select>':
+            st.write('Select two laps to compare')
+            st.image("img/livegap.png", use_column_width=True)
+        else:
+            st.altair_chart(
+                RUN_OBJECTS_DICT[run_selector].laps_delta_comparison_chart(
+                    circuit, lapA_selector, lapB_selector),
+                use_container_width=True
+            )
 
     with track:
         sectors, microsectors, turns = st.tabs(['Sectors', 'Microsectors', 'Turns'])
-        circuit = CircuitChart(seed=int(run_selector.split(':')[1]), random_orientation=False)
-
         with sectors:
             sector = st.radio(
                 'Select sector',
