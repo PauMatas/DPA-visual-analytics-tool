@@ -90,8 +90,13 @@ class Lap:
     
     # CHARTS
     
-    def gg_diagram(self):
-        return alt.Chart(self.df).mark_point().encode(
+    def gg_diagram(self, sector: int = None, microsectors: bool = False) -> alt.Chart:
+        if sector is None:
+            chart = alt.Chart(self.df)
+        else:
+            chart = alt.Chart(self.df[self.df['sector'] == sector]) if not microsectors else alt.Chart(self.df[self.df['microsector'] == sector])
+
+        return chart.mark_point().encode(
             x='VN_ax:Q',
             y='VN_ay:Q',
             color=alt.Color('laps:N', scale=alt.Scale(scheme='tableau10')),

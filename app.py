@@ -179,9 +179,9 @@ with lap_panel:
                 
                 with sector_gg_diagram:
                     if lapA_selector != '<select>':
-                        gg_diagram = RUN_OBJECTS_DICT[run_selector].laps[int(lapA_selector)].gg_diagram()
+                        gg_diagram = RUN_OBJECTS_DICT[run_selector].laps[int(lapA_selector)].gg_diagram(sector=sector)
                         if lapB_selector != '<select>':
-                            gg_diagram += RUN_OBJECTS_DICT[run_selector].laps[int(lapB_selector)].gg_diagram()
+                            gg_diagram += RUN_OBJECTS_DICT[run_selector].laps[int(lapB_selector)].gg_diagram(sector=sector)
                         st.altair_chart(gg_diagram, use_container_width=True)
 
         with microsectors:
@@ -240,9 +240,9 @@ with lap_panel:
                 
                 with microsector_gg_diagram:
                     if lapA_selector != '<select>':
-                        gg_diagram = RUN_OBJECTS_DICT[run_selector].laps[int(lapA_selector)].gg_diagram()
+                        gg_diagram = RUN_OBJECTS_DICT[run_selector].laps[int(lapA_selector)].gg_diagram(sector=microsector, microsectors=True)
                         if lapB_selector != '<select>':
-                            gg_diagram += RUN_OBJECTS_DICT[run_selector].laps[int(lapB_selector)].gg_diagram()
+                            gg_diagram += RUN_OBJECTS_DICT[run_selector].laps[int(lapB_selector)].gg_diagram(sector=microsector, microsectors=True)
                         st.altair_chart(gg_diagram, use_container_width=True)
 
         with turns:
