@@ -68,6 +68,7 @@ class Run:
         return alt.Chart(df).mark_point().encode(
             y='laptime:Q',
             x = 'smoothness:Q',
+            color = 'lap:N',
             shape='driver:N',
             tooltip=['lap', 'laptime', 'driver']
         )

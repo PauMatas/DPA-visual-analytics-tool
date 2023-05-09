@@ -26,9 +26,9 @@ class RadarChart:
         self.height = kwargs.get('height', 250)
 
         assert(self.df.axis.min() == 0)
-        assert(self.df.line.min() == 0)
+        self.line_min = self.df.line.min()
         self.n_axis = len(self.df['axis'].unique())
-        self.n_lines = len(self.df['line'].unique())
+        self.n_lines = self.df['line'].unique()
         self.max_value = int(self.df.metric.max()*1.2)
 
         self._add_line_closing()
@@ -75,7 +75,7 @@ class RadarChart:
     
     def _background_gray(self):
         return alt.Chart(self.df).transform_filter(
-            (alt.datum.line == 0)
+            (alt.datum.line == self.line_min)
         ).transform_calculate(
             dx=self.max_value * alt.datum.cos,
             dy=self.max_value * alt.datum.sin
@@ -93,7 +93,7 @@ class RadarChart:
 
         for i in [i * self.max_value / self.n_ticks for i in range(1, self.n_ticks + 1)]:
             lines += alt.Chart(self.df).transform_filter(
-                (alt.datum.line == 0)
+                (alt.datum.line == self.line_min)
             ).transform_calculate(
                 dx= i * alt.datum.cos,
                 dy= i * alt.datum.sin
@@ -116,7 +116,7 @@ class RadarChart:
 
         for axis in range(self.n_axis):
             radii += alt.Chart(self.df).transform_filter(
-                (alt.datum.line == 0) 
+                (alt.datum.line == self.line_min)
             ).transform_calculate(
                 dx=(alt.datum.axis == axis) * (self.max_value * alt.datum.cos),
                 dy=(alt.datum.axis == axis) * (self.max_value * alt.datum.sin)
@@ -149,7 +149,7 @@ class RadarChart:
     
     def _axis_labels(self):
         return alt.Chart(self.df).transform_filter(
-            (alt.datum.line == 0) 
+            (alt.datum.line == self.line_min) 
         ).transform_calculate(
             dx=(self.max_value * alt.datum.cos + alt.datum.cos) * 1.1,
             dy=(self.max_value * alt.datum.sin + alt.datum.sin) * 1.1,
@@ -164,13 +164,13 @@ class RadarChart:
             height=self.height
         )
     
-    def _radar_chart(self, line):
+    def _radar_chart(self, line: int, color: int) -> alt.Chart:
         return alt.Chart(self.df).transform_filter(
             (alt.datum.line == line)
         ).transform_calculate(
             dx=alt.datum.metric * alt.datum.cos,
             dy=alt.datum.metric * alt.datum.sin,
-        ).mark_line(strokeWidth=2, strokeOpacity=1, color=COLORS[line]).encode(
+        ).mark_line(strokeWidth=2, strokeOpacity=1, color=COLORS[color]).encode(
             x=alt.X("dx:Q", axis=None),
             y=alt.Y("dy:Q", axis=None),
             order="axis",
@@ -182,8 +182,8 @@ class RadarChart:
     
     def _radars_chart(self):
         radars = alt.layer()
-        for line in range(self.n_lines):
-            radars += self._radar_chart(line)
+        for i, line in enumerate(self.n_lines):
+            radars += self._radar_chart(line, color=i)
 
         return radars
 
