@@ -23,7 +23,7 @@ for run in RUNS:
     run_object = None
     for f in listdir(join(dirname(abspath(__file__)), 'data', run)):
         if isfile(join(dirname(abspath(__file__)), 'data', run, f)) and f.endswith('.csv'):
-            new_run_object = Run(join(dirname(abspath(__file__)), 'data', run, f), INFO[run])
+            new_run_object = Run(join(dirname(abspath(__file__)), 'data', run, f), info=INFO[run], filename=f)
             run_object = new_run_object if run_object is None else run_object + new_run_object
 
     RUN_OBJECTS_DICT[run] = run_object
@@ -85,7 +85,7 @@ with run_panel:
         if lapA_selector == '<select>':
             mean_v_chart, out_v_chart, breaking_point_chart = RUN_OBJECTS_DICT[run_selector].breaking_charts(turns_json)
         else:
-            lap_numbers = [int(lapA_selector), int(lapB_selector)] if lapB_selector != '<select>' else [int(lapA_selector)]
+            lap_numbers = [int(lapA_selector) - 1, int(lapB_selector) - 1] if lapB_selector != '<select>' else [int(lapA_selector) - 1]
             mean_v_chart, out_v_chart, breaking_point_chart = RUN_OBJECTS_DICT[run_selector].breaking_charts(turns_json, laps=lap_numbers)
         
         columns = st.columns(2)
@@ -151,7 +151,7 @@ with lap_panel:
                     sectors_delta = compute_sectors_deltas(
                         info=RUN_OBJECTS_DICT[run_selector].info,
                         filename=RUN_OBJECTS_DICT[run_selector].laps[int(lapA_selector)].filename,
-                        lap=lapA_selector
+                        lap=lapA_selector - RUN_OBJECTS_DICT[run_selector].lap_map[lapA_selector]
                         )
                     st.altair_chart(
                         circuit.colored_sectors_chart(sectors_delta),
@@ -160,9 +160,9 @@ with lap_panel:
                     sectors_comparison = compute_sectors_comparison(
                         info=RUN_OBJECTS_DICT[run_selector].info,
                         filenameA=RUN_OBJECTS_DICT[run_selector].laps[int(lapA_selector)].filename,
-                        lapA=lapA_selector,
+                        lapA=lapA_selector - RUN_OBJECTS_DICT[run_selector].lap_map[lapA_selector],
                         filenameB=RUN_OBJECTS_DICT[run_selector].laps[int(lapB_selector)].filename,
-                        lapB=lapB_selector
+                        lapB=lapB_selector - RUN_OBJECTS_DICT[run_selector].lap_map[lapB_selector]
                         )
                     st.altair_chart(
                         circuit.colored_sectors_chart(sectors_comparison),
@@ -210,7 +210,7 @@ with lap_panel:
                     microsectors_delta = compute_sectors_deltas(
                         info=RUN_OBJECTS_DICT[run_selector].info,
                         filename=RUN_OBJECTS_DICT[run_selector].laps[int(lapA_selector)].filename,
-                        lap=lapA_selector,
+                        lap=lapA_selector - RUN_OBJECTS_DICT[run_selector].lap_map[lapA_selector],
                         microsectors=True
                         )
                     st.altair_chart(
@@ -220,9 +220,9 @@ with lap_panel:
                     microsectors_comparison = compute_sectors_comparison(
                         info=RUN_OBJECTS_DICT[run_selector].info,
                         filenameA=RUN_OBJECTS_DICT[run_selector].laps[int(lapA_selector)].filename,
-                        lapA=lapA_selector,
+                        lapA=lapA_selector - RUN_OBJECTS_DICT[run_selector].lap_map[lapA_selector],
                         filenameB=RUN_OBJECTS_DICT[run_selector].laps[int(lapB_selector)].filename,
-                        lapB=lapB_selector,
+                        lapB=lapB_selector - RUN_OBJECTS_DICT[run_selector].lap_map[lapB_selector],
                         microsectors=True
                         )
                     st.altair_chart(

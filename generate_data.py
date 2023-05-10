@@ -20,7 +20,7 @@ def generate_run(gates: Gates, circuit: CircuitChart) -> tuple[list[pd.DataFrame
         # 'MinCurv': run_min_curv,
         # 'MinDist': run_min_dist,
         # # 'MinCurvDist': run_min_curv_dist,
-        # 'MidLine': run_midline,
+        'MidLine': run_midline,
     }
     
     runs_dfs_list = []

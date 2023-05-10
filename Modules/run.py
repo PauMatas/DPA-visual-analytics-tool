@@ -14,10 +14,10 @@ class Run:
     COLUMNS = ['TimeStamp', 'Throttle', 'Steering', 'VN_ax', 'VN_ay', 'xPosition', 'yPosition', 'zPosition', 'Velocity', 'laps', 'delta', 'dist1', 'BPE', 'sector', 'microsector']
 
     def __init__(self, csv: str | None | pd.DataFrame = None, info: dict = None, filename: str = None) -> None:
-        if info is not None:
-            self.info = info
-        else:
+        if info is None:
             self.info = {}
+        else:
+            self.info = info
 
         if csv is not None:
             if isinstance(csv, pd.DataFrame):
@@ -29,10 +29,12 @@ class Run:
                 filename = basename(csv)
             if filename is None:
                 raise ValueError('filename must be provided if csv is not a string')
+            
             self.laps = [
                 Lap(lap_df.reset_index(), number=i, info=self.info, filename=filename)
                 for i, (_, lap_df) in enumerate(self.df.groupby('laps'))
             ]
+            self.lap_map = [0 for _ in self.laps]
     
     def describe(self):
         return self.df.describe()
@@ -45,6 +47,11 @@ class Run:
         for lap in sum.laps:
             lap.number += len(self.laps)
         sum.laps = self.laps + sum.laps
+        sum.lap_map = self.lap_map + [lap_map + len(self.laps) for lap_map in other.lap_map]
+
+
+        if self.info == other.info:
+            sum.info = self.info
 
         return sum
 
@@ -76,11 +83,9 @@ class Run:
             tooltip=['lap', 'laptime', 'driver']
         )
     
-    def breaking_charts(self, turns_json: list[dict], chart_sections: int = 4, laps: list = None) -> tuple[alt.Chart]:
-        if laps is None:
-            laps = [lap.number for lap in self.laps]
+    def breaking_charts(self, turns_json: list[dict], chart_sections: int = 4, laps: list = []) -> tuple[alt.Chart]:
         radars = []
-        axis_names, axis_idxs, lines, mean_v, out_v, distance_before_breaking = get_breaking_stats(turns_json, laps, self.df)
+        axis_names, axis_idxs, lines, mean_v, out_v, distance_before_breaking = get_breaking_stats(turns_json, [lap.number for lap in self.laps], self.df, self.lap_map, lap_idxs=laps)
         for metric in [mean_v, out_v, distance_before_breaking]:
             df = pd.DataFrame({'axis_name': axis_names, 'axis': axis_idxs, 'line': lines, 'metric': metric})
             radars.append(RadarChart(df, chart_sections).chart)
@@ -94,9 +99,11 @@ class Run:
         delta = []
         for i in range(intervals):
             door = circuit.middle_curve(circuit.middle_curve.t[-1] * (i+1)/intervals)
-            Ai = lapA_kdtree.query([door])[0][0]
-            Bi = lapB_kdtree.query([door])[0][0]
-            delta.append(self.laps[lapA].df.iloc[Ai]['TimeStamp'].values[0] - self.laps[lapB].df.iloc[Bi]['TimeStamp'].values[0])
+            Ai = lapA_kdtree.query([door])[1][0][0]
+            Bi = lapB_kdtree.query([door])[1][0][0]
+            delta.append(self.laps[lapA].df['delta'][:Ai].sum() - self.laps[lapB].df['delta'][:Bi].sum())
+        
+        print(delta)
 
         data = pd.DataFrame({
             'delta': delta,
@@ -104,9 +111,11 @@ class Run:
             'color': ['lapA' if d > 0 else 'lapB' for d in delta]
         })
 
+        print(data)
+
         return alt.Chart(data).mark_bar().encode(
-            x=alt.X('delta:Q', scale=alt.Scale(domain=[-1, 1])),
-            y=alt.Y('bin:Q', axis=None),
+            x=alt.X('delta:Q'),
+            y=alt.Y('bin:N', axis=None),
             color=alt.condition(
                 alt.datum.delta != 0,
                 alt.Color('color:N', legend=None, scale=alt.Scale(scheme='tableau10')),
@@ -114,4 +123,7 @@ class Run:
             ),
             order='bin:Q',
             tooltip=['delta:Q']
+        ).properties(
+            height=500,
+            title=f'Lap {lapA} - Lap {lapB} delta'
         )
