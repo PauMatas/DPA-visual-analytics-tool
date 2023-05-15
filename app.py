@@ -8,7 +8,7 @@ from os.path import dirname, abspath, join, isfile
 import vegafusion as vf
 vf.enable()
 
-from Modules import Run, compute_sectors_deltas, compute_sectors_comparison
+from Modules import Run, compute_sectors_deltas, compute_sectors_comparison, laps_df
 from Modules.circuit import CircuitChart
 alt.data_transformers.disable_max_rows()
 
@@ -113,6 +113,11 @@ with run_panel:
         st.altair_chart(steering_smoothness_chart.properties(height=300), use_container_width=True)
 
 # ---------- LAP PANEL ----------
+if lapA_selector != '<select>':
+    laps_df = laps_df(RUN_OBJECTS_DICT[run_selector].laps, RUN_OBJECTS_DICT[run_selector].info, lapA_selector)
+else:
+    laps_df = laps_df(RUN_OBJECTS_DICT[run_selector].laps, RUN_OBJECTS_DICT[run_selector].info)
+
 with lap_panel:
     circuit = CircuitChart(seed=int(run_selector.split(':')[1]), random_orientation=False)
     sectors, microsectors, turns = st.tabs(['Sectors', 'Microsectors', 'Turns'])
@@ -127,11 +132,11 @@ with lap_panel:
         )
 
         if sector == 'All sectors':
-            delta_comparison, track = st.columns([1,4])
+            delta_comparison, track, _ = st.columns(3)
             with delta_comparison:
                 if lapA_selector == '<select>' or lapB_selector == '<select>':
                     st.write('Select two laps to compare')
-                    st.image("img/livegap.png", use_column_width=True)
+                    st.dataframe(laps_df)
                 else:
                     st.altair_chart(
                         RUN_OBJECTS_DICT[run_selector].laps_delta_comparison_chart(
@@ -168,12 +173,12 @@ with lap_panel:
         else:
             sector_idx = sector - 1
             
-            delta_comparison, sector_racing_line, sector_gg_diagram = st.columns([1,2,2])
+            delta_comparison, sector_racing_line, sector_gg_diagram = st.columns(3)
             
             with delta_comparison:
                 if lapA_selector == '<select>' or lapB_selector == '<select>':
                     st.write('Select two laps to compare')
-                    st.image("img/livegap.png", use_column_width=True)
+                    st.dataframe(laps_df)
                 else:
                     st.altair_chart(
                         RUN_OBJECTS_DICT[run_selector].laps_delta_comparison_chart(
@@ -211,11 +216,11 @@ with lap_panel:
         )
 
         if microsector == 'All microsectors':
-            delta_comparison, track = st.columns([1,4])
+            delta_comparison, track, _ = st.columns(3)
             with delta_comparison:
                 if lapA_selector == '<select>' or lapB_selector == '<select>':
                     st.write('Select two laps to compare')
-                    st.image("img/livegap.png", use_column_width=True)
+                    st.dataframe(laps_df)
                 else:
                     st.altair_chart(
                         RUN_OBJECTS_DICT[run_selector].laps_delta_comparison_chart(
@@ -254,12 +259,12 @@ with lap_panel:
         else:
             microsector_idx = microsector - 1
             
-            delta_comparison, microsector_racing_line, microsector_gg_diagram = st.columns([1,2,2])
+            delta_comparison, microsector_racing_line, microsector_gg_diagram = st.columns(3)
             
             with delta_comparison:
                 if lapA_selector == '<select>' or lapB_selector == '<select>':
                     st.write('Select two laps to compare')
-                    st.image("img/livegap.png", use_column_width=True)
+                    st.dataframe(laps_df)
                 else:
                     st.altair_chart(
                         RUN_OBJECTS_DICT[run_selector].laps_delta_comparison_chart(

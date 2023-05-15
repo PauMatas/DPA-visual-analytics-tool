@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 
 def compute_sectors_deltas(info: dict, filename: str, lap: int, microsectors: bool = False) -> list:
     """
@@ -35,3 +36,41 @@ def compute_sectors_comparison(info: dict, filenameA: str, lapA: int, filenameB:
         'other' if tA == tB else ('lapA' if tA < tB else 'lapB')
         for tA, tB in zip(lapA_times, lapB_times)
     ]
+
+def color_laps_df_rows(row: pd.Series, info: dict, selected_lap: int = None) -> list:
+    """
+    Returns a colormap for the rows of the laps dataframe.
+    """
+    if selected_lap is not None and int(row['Lap'].split(' ')[1]) == selected_lap:
+        row_colors = ['background-color: rgba(78, 121, 167, 0.5);'] * 2
+    else:
+        row_colors = ['background-color: white;'] * 2
+
+    if row['Laptime'] == info['best_times']['global']['laptime']:
+        row_colors += ['background-color: rgba(128, 0, 128, 0.5);']
+    elif row['Laptime'] == info['best_times'][row['Driver']]['laptime']:
+        row_colors += ['background-color: rgba(44, 160, 44, 0.5);']
+    else:
+        row_colors += ['background-color: white;']
+    
+    return row_colors
+
+def laps_df(laps: list, info: dict, selected_lap: int = None) -> pd.DataFrame:
+    """
+    Create a colored dataframe with the laps information.
+    """
+    laps_df = pd.DataFrame(
+        [
+            {
+                'Lap': f'Lap {lap.number}',
+                'Driver': lap.driver,
+                'Laptime': lap.laptime,
+            }
+            for lap in laps
+        ]
+    )
+
+    return laps_df.style.apply(
+        lambda row: color_laps_df_rows(row, info, selected_lap),
+        axis=1
+    )

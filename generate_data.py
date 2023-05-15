@@ -59,13 +59,15 @@ def save_run(seed: int, run_df: list[pd.DataFrame], run_info: dict) -> None:
 
 def times_dict(df: pd.DataFrame) -> dict:
     """Calculate times."""
-    laptime = max(df.groupby('laps')['delta'].sum())
+
+    groupby = ['laps', 'driver'] if 'driver' in df else ['laps']
+    laptime = min(df.groupby(groupby)['delta'].sum())
     sectors = [
-        max(df[df['sector'] == sector].groupby('laps')['delta'].sum())
+        min(df[df['sector'] == sector].groupby(groupby)['delta'].sum())
         for sector in range(1, N_SECTORS + 1)
     ]
     microsectors = [
-        max(df[df['microsector'] == microsector].groupby('laps')['delta'].sum())
+        min(df[df['microsector'] == microsector].groupby(groupby)['delta'].sum())
         for microsector in range(1, N_MICROSECTORS + 1)
     ]
 
