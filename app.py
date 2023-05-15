@@ -132,7 +132,7 @@ with lap_panel:
         )
 
         if sector == 'All sectors':
-            delta_comparison, track, _ = st.columns(3)
+            delta_comparison, track, _ = st.columns([2,3,2])
             with delta_comparison:
                 if lapA_selector == '<select>' or lapB_selector == '<select>':
                     st.write('Select two laps to compare')
@@ -157,6 +157,7 @@ with lap_panel:
                         )
                     st.altair_chart(
                         circuit.colored_sectors_chart(sectors_delta),
+                        use_container_width=True
                     )
                 else:
                     sectors_comparison = compute_sectors_comparison(
@@ -168,12 +169,13 @@ with lap_panel:
                         )
                     st.altair_chart(
                         circuit.colored_sectors_chart(sectors_comparison),
+                        use_container_width=True
                     )
 
         else:
             sector_idx = sector - 1
             
-            delta_comparison, sector_racing_line, sector_gg_diagram = st.columns(3)
+            delta_comparison, sector_racing_line, sector_gg_diagram = st.columns([2,3,2])
             
             with delta_comparison:
                 if lapA_selector == '<select>' or lapB_selector == '<select>':
@@ -216,7 +218,7 @@ with lap_panel:
         )
 
         if microsector == 'All microsectors':
-            delta_comparison, track, _ = st.columns(3)
+            delta_comparison, track, _ = st.columns([2,3,2])
             with delta_comparison:
                 if lapA_selector == '<select>' or lapB_selector == '<select>':
                     st.write('Select two laps to compare')
@@ -242,6 +244,7 @@ with lap_panel:
                         )
                     st.altair_chart(
                         circuit.colored_sectors_chart(microsectors_delta, microsectors=True),
+                        use_container_width=True
                     )
                 else:
                     microsectors_comparison = compute_sectors_comparison(
@@ -254,12 +257,13 @@ with lap_panel:
                         )
                     st.altair_chart(
                         circuit.colored_sectors_chart(microsectors_comparison, microsectors=True),
+                        use_container_width=True
                     )
 
         else:
             microsector_idx = microsector - 1
             
-            delta_comparison, microsector_racing_line, microsector_gg_diagram = st.columns(3)
+            delta_comparison, microsector_racing_line, microsector_gg_diagram = st.columns([2,3,2])
             
             with delta_comparison:
                 if lapA_selector == '<select>' or lapB_selector == '<select>':

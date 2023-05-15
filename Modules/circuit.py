@@ -201,19 +201,26 @@ class CircuitChart(Circuit):
             curve_df["curve"] = track_name
             df = pd.concat([df, curve_df])
 
-        if 'lapA' in df["delta"].unique().tolist() or 'lapB' in df["delta"].unique().tolist():
-            legend = alt.Legend(title='Lap', values=["lapA", "lapB"])
+        if 'best' in df["delta"].unique().tolist() or 'personal_best' in df["delta"].unique().tolist() or 'other' in df["delta"].unique().tolist():
+            color=alt.Color(
+                "delta:N",
+                scale=alt.Scale(range=["purple", "green", "yellow"], domain=["best", "personal_best", "other"]),
+                legend=None,
+            )
+            tooltip_labels = {'sector': 'Microsector' if microsectors else 'Sector'}
         else:
-            legend = alt.Legend(title='Time', values=["best", "personal_best", "other"])
+            domain = most_extreme if (most_extreme:=max(abs(df["delta"].min()), abs(df["delta"].max()))) < 4000 else min(abs(df["delta"].min()), abs(df["delta"].max()))
+            color = alt.Color(
+                "delta:Q",
+                scale=alt.Scale(scheme='blueorange', domain=[-domain, domain]),
+                legend=alt.Legend(title="Lap A time - Lap B time [ms]"),
+            )
+            tooltip_labels = {'delta': 'LapA time-LapB time', 'sector': 'Microsector' if microsectors else 'Sector'}
 
         return alt.Chart(df).mark_line().encode(
             x=alt.X("x", axis=None),
             y=alt.Y("y", axis=None),
-            color=alt.Color(
-                "delta:N",
-                scale=alt.Scale(range=["purple", "green", "yellow", '#4E79A7', '#F28E2B'], domain=["best", "personal_best", "other", "lapA", "lapB"]),
-                legend=legend
-            ),
+            color=color,
             order="index",
             detail=alt.Detail(["curve:N", "sector:N"]),
             strokeWidth=alt.condition(
@@ -223,7 +230,8 @@ class CircuitChart(Circuit):
             strokeOpacity=alt.condition(
                 alt.datum.curve == "middle",
                 alt.value(0.5),
-                alt.value(1))  
+                alt.value(1)),
+            tooltip=[alt.Tooltip(field=field, title=label) for field, label in tooltip_labels.items()],
         ).properties(
             title=f"Fastest lap per {'microsector' if microsectors else 'sector'}"
         )

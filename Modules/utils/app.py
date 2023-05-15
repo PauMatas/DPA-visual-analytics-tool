@@ -33,7 +33,7 @@ def compute_sectors_comparison(info: dict, filenameA: str, lapA: int, filenameB:
     lapB_times = info[filenameB]['laps'][str(lapB)][segments]
 
     return [
-        'other' if tA == tB else ('lapA' if tA < tB else 'lapB')
+        tA - tB
         for tA, tB in zip(lapA_times, lapB_times)
     ]
 
