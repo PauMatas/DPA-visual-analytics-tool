@@ -92,25 +92,30 @@ class Run:
         
         return tuple(radars)
     
-    def laps_delta_comparison_chart(self, circuit: Circuit,  lapA: int, lapB: int, intervals: int = None, sector: int = None, microsectors: bool = False) -> alt.Chart:
-        if intervals is None:
-            intervals = 100 if sector is None else (10 if microsectors else 40)
+    def laps_delta_comparison_chart(self, circuit: Circuit,  lapA: int, lapB: int, intervals: int = None, sector: int | tuple = None) -> alt.Chart:
+        microsectors = False
+        if isinstance(sector, tuple):
+            microsectors = True
+            sector = list(range(sector[0], sector[-1] + 1))
 
         if sector is None:
             positionsA = self.laps[lapA].df[['xPosition', 'yPosition']]
             positionsB = self.laps[lapB].df[['xPosition', 'yPosition']]
             start = circuit.middle_curve.t[0]
             end = circuit.middle_curve.t[-1]
+            intervals = 100
         elif microsectors:
-            positionsA = self.laps[lapA].df[self.laps[lapA].df['microsector'] == sector][['xPosition', 'yPosition']]
-            positionsB = self.laps[lapB].df[self.laps[lapB].df['microsector'] == sector][['xPosition', 'yPosition']]
-            start = circuit.middle_curve.t[-1] * sector / circuit.N_MICROSECTORS
-            end = circuit.middle_curve.t[-1] * (sector + 1) / circuit.N_MICROSECTORS
+            positionsA = self.laps[lapA].df[self.laps[lapA].df['microsector'].isin(sector)][['xPosition', 'yPosition']]
+            positionsB = self.laps[lapB].df[self.laps[lapB].df['microsector'].isin(sector)][['xPosition', 'yPosition']]
+            start = circuit.middle_curve.t[-1] * sector[0] / circuit.N_MICROSECTORS
+            end = circuit.middle_curve.t[-1] * (sector[-1] + 1) / circuit.N_MICROSECTORS
+            intervals = int(np.ceil(100 * (end-start) / (circuit.middle_curve.t[-1] - circuit.middle_curve.t[0])))
         else:
             positionsA = self.laps[lapA].df[self.laps[lapA].df['sector'] == sector][['xPosition', 'yPosition']]
             positionsB = self.laps[lapB].df[self.laps[lapB].df['sector'] == sector][['xPosition', 'yPosition']]
             start = circuit.middle_curve.t[-1] * sector / circuit.N_SECTORS
             end = circuit.middle_curve.t[-1] * (sector + 1) / circuit.N_SECTORS
+            intervals = int(np.ceil(100 * (end-start) / (circuit.middle_curve.t[-1] - circuit.middle_curve.t[0])))
 
         lapA_kdtree = KDTree(positionsA)
         lapB_kdtree = KDTree(positionsB)

@@ -90,13 +90,17 @@ class Lap:
     
     # CHARTS
     
-    def gg_diagram(self, sector: int = None, microsectors: bool = False) -> alt.Chart:
+    def gg_diagram(self, sector: int | tuple = None) -> alt.Chart:
+        microsectors = False
+        if isinstance(sector, tuple):
+            microsectors = True
+            sector = list(range(sector[0], sector[-1] + 1))
         if sector is None:
             chart = alt.Chart(self.df)
         else:
-            chart = alt.Chart(self.df[self.df['sector'] == sector]) if not microsectors else alt.Chart(self.df[self.df['microsector'] == sector])
+            chart = alt.Chart(self.df[self.df['sector'] == sector]) if not microsectors else alt.Chart(self.df[self.df['microsector'].isin(sector)])
 
-        sector_title = f"- {'Micros' if microsectors else 'S'}ector {sector}"
+        sector_title = f"- Microsector{f's {sector[0]} to {sector[-1]}' if len(sector)>1 else f' {sector[0]}'}" if microsectors else f'- Sector {sector}'
 
         return chart.mark_point().encode(
             x=alt.X('VN_ax:Q', axis=alt.Axis(title='Tansversal Acceleration [m/s²]')),
@@ -108,7 +112,11 @@ class Lap:
             title=f"GG Diagram - Circuit: {self.filename.split('_')[0]}{sector_title if sector is not None else ''}"
         )
     
-    def racing_line_df(self, curve_name: str = 'middle', sector: int = None, microsectors: bool = False) -> pd.DataFrame:
+    def racing_line_df(self, curve_name: str = 'middle', sector: int | tuple = None) -> pd.DataFrame:
+        microsectors = False
+        if isinstance(sector, tuple):
+            microsectors = True
+            sector = list(range(sector[0], sector[-1] + 1))
         if sector is None:
             df = pd.DataFrame({
                 'x': self.df['xPosition'],
@@ -116,8 +124,8 @@ class Lap:
             })
         elif microsectors:
             df = pd.DataFrame({
-                'x': self.df[self.df['microsector'] == sector]['xPosition'],
-                'y': self.df[self.df['microsector'] == sector]['yPosition'],
+                'x': self.df[self.df['microsector'].isin(sector)]['xPosition'],
+                'y': self.df[self.df['microsector'].isin(sector)]['yPosition'],
             })
         else:
             df = pd.DataFrame({

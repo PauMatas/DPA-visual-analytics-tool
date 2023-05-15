@@ -31,13 +31,18 @@ def spline_chart_df(spline: Spline | np.ndarray, precision: int = 1000, showcone
         return lines_df
 
 def sector_spline(spline: Spline, sector: int, microsectors: bool, precision: int = None) -> np.ndarray:
-    if precision is None:
-        precision = 1000 // (CircuitChart.N_MICROSECTORS if microsectors else CircuitChart.N_SECTORS)
     if sector is None:
         return spline
     
-    sector_start = spline.t[-1] * sector / (CircuitChart.N_MICROSECTORS if microsectors else CircuitChart.N_SECTORS)
-    sector_end = spline.t[-1] * (sector+1) / (CircuitChart.N_MICROSECTORS if microsectors else CircuitChart.N_SECTORS)
+    if microsectors:
+        sector_start = spline.t[-1] * sector[0] / CircuitChart.N_MICROSECTORS
+        sector_end = spline.t[-1] * (sector[-1]+1) / CircuitChart.N_MICROSECTORS
+    else:
+        sector_start = spline.t[-1] * sector / CircuitChart.N_SECTORS
+        sector_end = spline.t[-1] * (sector+1) / CircuitChart.N_SECTORS
+    if precision is None:
+        precision = int(np.ceil(1000 * (sector_end - sector_start) / spline.t[-1]))
+    
     sector = np.linspace(sector_start, sector_end, precision)
     gamma = spline(sector)
     return gamma
@@ -51,7 +56,7 @@ class CircuitChart(Circuit):
         super().__init__(*args, **kwargs)
         self.set_sectors()
 
-    def chart(self, middle_curve_df: pd.DataFrame = None, important_points: pd.DataFrame = None, sector: int = None, microsectors: bool = False) -> alt.Chart:
+    def chart(self, middle_curve_df: pd.DataFrame = None, important_points: pd.DataFrame = None, sector: int | tuple = None) -> alt.Chart:
         """Charts the circuit layout
 
         Arguments:
@@ -63,6 +68,12 @@ class CircuitChart(Circuit):
         Returns:
             chart (alt.Chart) : the chart of the circuit layout
         """
+
+        microsectors = False
+        if isinstance(sector, tuple):
+            microsectors = True
+            sector = list(range(sector[0], sector[-1] + 1))
+
         curve_options = {
             "interior": sector_spline(self.interior_curve, sector=sector, microsectors=microsectors),
             "exterior": sector_spline(self.exterior_curve, sector=sector, microsectors=microsectors),
