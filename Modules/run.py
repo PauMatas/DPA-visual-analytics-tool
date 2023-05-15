@@ -92,29 +92,44 @@ class Run:
         
         return tuple(radars)
     
-    def laps_delta_comparison_chart(self, circuit: Circuit,  lapA: int, lapB: int, intervals: int = 100) -> alt.Chart:
-        lapA_kdtree = KDTree(self.laps[lapA].df[['xPosition', 'yPosition']])
-        lapB_kdtree = KDTree(self.laps[lapB].df[['xPosition', 'yPosition']])
+    def laps_delta_comparison_chart(self, circuit: Circuit,  lapA: int, lapB: int, intervals: int = None, sector: int = None, microsectors: bool = False) -> alt.Chart:
+        if intervals is None:
+            intervals = 100 if sector is None else (10 if microsectors else 40)
+
+        if sector is None:
+            positionsA = self.laps[lapA].df[['xPosition', 'yPosition']]
+            positionsB = self.laps[lapB].df[['xPosition', 'yPosition']]
+            start = circuit.middle_curve.t[0]
+            end = circuit.middle_curve.t[-1]
+        elif microsectors:
+            positionsA = self.laps[lapA].df[self.laps[lapA].df['microsector'] == sector][['xPosition', 'yPosition']]
+            positionsB = self.laps[lapB].df[self.laps[lapB].df['microsector'] == sector][['xPosition', 'yPosition']]
+            start = circuit.middle_curve.t[-1] * sector / circuit.N_MICROSECTORS
+            end = circuit.middle_curve.t[-1] * (sector + 1) / circuit.N_MICROSECTORS
+        else:
+            positionsA = self.laps[lapA].df[self.laps[lapA].df['sector'] == sector][['xPosition', 'yPosition']]
+            positionsB = self.laps[lapB].df[self.laps[lapB].df['sector'] == sector][['xPosition', 'yPosition']]
+            start = circuit.middle_curve.t[-1] * sector / circuit.N_SECTORS
+            end = circuit.middle_curve.t[-1] * (sector + 1) / circuit.N_SECTORS
+
+        lapA_kdtree = KDTree(positionsA)
+        lapB_kdtree = KDTree(positionsB)
 
         delta = []
         for i in range(intervals):
-            door = circuit.middle_curve(circuit.middle_curve.t[-1] * (i+1)/intervals)
+            door = circuit.middle_curve(start + ((end - start) * (i+1)/intervals))
             Ai = lapA_kdtree.query([door])[1][0][0]
             Bi = lapB_kdtree.query([door])[1][0][0]
             delta.append(self.laps[lapA].df['delta'][:Ai].sum() - self.laps[lapB].df['delta'][:Bi].sum())
         
-        print(delta)
-
         data = pd.DataFrame({
             'delta': delta,
             'bin': list(range(intervals)),
             'color': ['lapA' if d > 0 else 'lapB' for d in delta]
         })
 
-        print(data)
-
         return alt.Chart(data).mark_bar().encode(
-            x=alt.X('delta:Q'),
+            x=alt.X('delta:Q', axis=alt.Axis(title='Time difference [s]')),
             y=alt.Y('bin:N', axis=None),
             color=alt.condition(
                 alt.datum.delta != 0,
@@ -124,6 +139,6 @@ class Run:
             order='bin:Q',
             tooltip=['delta:Q']
         ).properties(
-            height=500,
-            title=f'Lap {lapA} - Lap {lapB} delta'
+            height=350,
+            title=f'Lap {lapA} time - Lap {lapB} time along track',
         )

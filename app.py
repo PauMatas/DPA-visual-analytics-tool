@@ -180,7 +180,7 @@ with lap_panel:
                 else:
                     st.altair_chart(
                         RUN_OBJECTS_DICT[run_selector].laps_delta_comparison_chart(
-                            circuit, lapA_selector, lapB_selector),
+                            circuit, lapA_selector, lapB_selector, sector=sector),
                         use_container_width=True
                     )
 
@@ -266,7 +266,7 @@ with lap_panel:
                 else:
                     st.altair_chart(
                         RUN_OBJECTS_DICT[run_selector].laps_delta_comparison_chart(
-                            circuit, lapA_selector, lapB_selector),
+                            circuit, lapA_selector, lapB_selector, sector=microsector, microsectors=True),
                         use_container_width=True
                     )
 
