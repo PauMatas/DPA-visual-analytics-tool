@@ -90,17 +90,14 @@ with run_panel:
         
         columns = st.columns(2)
         with columns[0]:
-            st.write('Average Speed per turn')
             st.altair_chart(mean_v_chart)
         
         with columns[1]:
-            st.write('Speed at the end of the turn')
             st.altair_chart(out_v_chart)
 
         # breaking point chart centered in the middle of the container
         _, column, _ = st.columns([1,3,1])
         with column:
-            st.write('Breaking point')
             st.altair_chart(breaking_point_chart)
 
     with smoothness_panel:

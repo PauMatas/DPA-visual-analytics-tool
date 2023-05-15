@@ -96,11 +96,16 @@ class Lap:
         else:
             chart = alt.Chart(self.df[self.df['sector'] == sector]) if not microsectors else alt.Chart(self.df[self.df['microsector'] == sector])
 
+        sector_title = f"- {'Micros' if microsectors else 'S'}ector {sector}"
+
         return chart.mark_point().encode(
-            x='VN_ax:Q',
-            y='VN_ay:Q',
+            x=alt.X('VN_ax:Q', axis=alt.Axis(title='Tansversal Acceleration [m/s²]')),
+            y=alt.Y('VN_ay:Q', axis=alt.Axis(title='Longitudinal Acceleration [m/s²]')),
             color=alt.Color('laps:N', scale=alt.Scale(scheme='tableau10')),
             tooltip=['TimeStamp', 'VN_ax', 'VN_ay']
+        ).properties(
+            height=350,
+            title=f"GG Diagram - Circuit: {self.filename.split('_')[0]}{sector_title if sector is not None else ''}"
         )
     
     def racing_line_df(self, curve_name: str = 'middle', sector: int = None, microsectors: bool = False) -> pd.DataFrame:

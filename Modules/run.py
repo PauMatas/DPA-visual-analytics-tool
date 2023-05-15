@@ -63,7 +63,7 @@ class Run:
             if lap.laptime is not None
         ]
         chart = self._smoothness_chart(pd.DataFrame(steering_json))
-        return chart.properties(title='Steering smoothness')
+        return chart.properties(title='Steering smoothness vs laptime')
     
     def throttle_smoothness_chart(self, laps: list[int] = None) -> alt.Chart:
         throttle_json = [
@@ -72,23 +72,23 @@ class Run:
             if lap.laptime is not None
         ]
         chart = self._smoothness_chart(pd.DataFrame(throttle_json))
-        return chart.properties(title='Throttle smoothness')
+        return chart.properties(title='Throttle smoothness vs laptime')
 
     def _smoothness_chart(self, df) -> alt.Chart:
         return alt.Chart(df).mark_point().encode(
-            y='laptime:Q',
-            x = 'smoothness:Q',
-            color = alt.Color('lap:N', scale=alt.Scale(scheme='tableau10')),
-            shape='driver:N',
+            y = alt.Y('laptime:Q', axis=alt.Axis(title='Laptime [s]')),
+            x = alt.X('smoothness:Q', axis=alt.Axis(title='Smoothness')),
+            color = alt.Color('lap:N', scale=alt.Scale(scheme='tableau10'), legend=alt.Legend(title='Lap number')),
+            shape=alt.Shape('driver:N', legend=alt.Legend(title='Driver')),
             tooltip=['lap', 'laptime', 'driver']
         )
     
     def breaking_charts(self, turns_json: list[dict], chart_sections: int = 4, laps: list = []) -> tuple[alt.Chart]:
         radars = []
         axis_names, axis_idxs, lines, mean_v, out_v, distance_before_breaking = get_breaking_stats(turns_json, [lap.number for lap in self.laps], self.df, self.lap_map, lap_idxs=laps)
-        for metric in [mean_v, out_v, distance_before_breaking]:
+        for metric, title in zip([mean_v, out_v, distance_before_breaking], ['Mean velocity', 'Velocity at the exit of the turn', 'Distance before breaking once in the turn']):
             df = pd.DataFrame({'axis_name': axis_names, 'axis': axis_idxs, 'line': lines, 'metric': metric})
-            radars.append(RadarChart(df, chart_sections).chart)
+            radars.append(RadarChart(df, chart_sections).chart.properties(title=title))
         
         return tuple(radars)
     
@@ -125,7 +125,7 @@ class Run:
         data = pd.DataFrame({
             'delta': delta,
             'bin': list(range(intervals)),
-            'color': ['lapA' if d > 0 else 'lapB' for d in delta]
+            'color': ['lapB' if d > 0 else 'lapA' for d in delta]
         })
 
         return alt.Chart(data).mark_bar().encode(
@@ -133,7 +133,11 @@ class Run:
             y=alt.Y('bin:N', axis=None),
             color=alt.condition(
                 alt.datum.delta != 0,
-                alt.Color('color:N', legend=None, scale=alt.Scale(scheme='tableau10')),
+                alt.Color(
+                    'color:N',
+                    scale=alt.Scale(scheme='tableau10'),
+                    legend=alt.Legend(title='Fastest lap'),
+                    ),
                 alt.value('yellow')
             ),
             order='bin:Q',

@@ -75,6 +75,8 @@ class CircuitChart(Circuit):
             if curve is not None:
                 lines_df = pd.concat([lines_df, spline_chart_df(curve, curve_name=curve_name)])
 
+        chart_title = "Circuit Layout" if middle_curve_df is None else "Racing Line and Track Limits"
+
         chart = (
             alt.Chart(lines_df).mark_line().encode(
                 x=alt.X("x:Q", axis=None),
@@ -85,6 +87,8 @@ class CircuitChart(Circuit):
                     legend=None),
                 order="index:O",
                 detail="curve:N",
+            ).properties(
+                title=chart_title,
             )
         )
         return chart
@@ -145,6 +149,8 @@ class CircuitChart(Circuit):
             y=alt.Y("y", axis=None),
             detail="sector:N",
             color=alt.value("black"),
+        ).properties(
+            title="Circuit Layout",
         )
     
     def set_sectors(self):
@@ -195,13 +201,18 @@ class CircuitChart(Circuit):
             curve_df["curve"] = track_name
             df = pd.concat([df, curve_df])
 
+        if 'lapA' in df["delta"].unique().tolist() or 'lapB' in df["delta"].unique().tolist():
+            legend = alt.Legend(title='Lap', values=["lapA", "lapB"])
+        else:
+            legend = alt.Legend(title='Time', values=["best", "personal_best", "other"])
+
         return alt.Chart(df).mark_line().encode(
             x=alt.X("x", axis=None),
             y=alt.Y("y", axis=None),
             color=alt.Color(
                 "delta:N",
                 scale=alt.Scale(range=["purple", "green", "yellow", '#4E79A7', '#F28E2B'], domain=["best", "personal_best", "other", "lapA", "lapB"]),
-                legend=None
+                legend=legend
             ),
             order="index",
             detail=alt.Detail(["curve:N", "sector:N"]),
@@ -213,6 +224,8 @@ class CircuitChart(Circuit):
                 alt.datum.curve == "middle",
                 alt.value(0.5),
                 alt.value(1))  
+        ).properties(
+            title=f"Fastest lap per {'microsector' if microsectors else 'sector'}"
         )
     
     def turns_chart(self, turns_json: list[dict]) -> alt.Chart:
@@ -269,4 +282,6 @@ class CircuitChart(Circuit):
             detail=alt.Detail(["curve:N", "sector:N"]),
             strokeWidth=alt.value(10),
             strokeOpacity=alt.value(0.5), 
+        ).properties(
+            title="Turns chart"
         )
