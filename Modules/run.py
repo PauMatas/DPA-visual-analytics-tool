@@ -75,7 +75,7 @@ class Run:
         return chart.properties(title='Throttle smoothness vs laptime')
 
     def _smoothness_chart(self, df) -> alt.Chart:
-        return alt.Chart(df).mark_point().encode(
+        return alt.Chart(df).mark_point(filled=True).encode(
             y = alt.Y('laptime:Q', axis=alt.Axis(title='Laptime [s]')),
             x = alt.X('smoothness:Q', axis=alt.Axis(title='Smoothness')),
             color = alt.Color('lap:N', scale=alt.Scale(scheme='tableau10'), legend=alt.Legend(title='Lap number')),

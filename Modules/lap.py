@@ -75,19 +75,19 @@ class Lap:
     # CHARTS
     
     def gg_diagram(self, sector: int | tuple = None) -> alt.Chart:
-        domain = np.max(np.abs(self.df[['VN_ax', 'VN_ay']].values))
+        domain = np.max(np.abs(self.df[['VN_ax', 'VN_ay']].quantile([0.05, 0.95]).values.tolist()))
         microsectors = False
         if isinstance(sector, tuple):
             microsectors = True
             sector = list(range(sector[0], sector[-1] + 1))
         if sector is None:
-            chart = alt.Chart(self.df)
+            chart = alt.Chart(self.df[::25])
         else:
-            chart = alt.Chart(self.df[self.df['sector'] == sector]) if not microsectors else alt.Chart(self.df[self.df['microsector'].isin(sector)])
+            chart = alt.Chart(self.df[self.df['sector'] == sector][::25]) if not microsectors else alt.Chart(self.df[self.df['microsector'].isin(sector)][::25])
 
         sector_title = f"- Microsector{f's {sector[0]} to {sector[-1]}' if len(sector)>1 else f' {sector[0]}'}" if microsectors else f'- Sector {sector}'
 
-        return chart.mark_point().encode(
+        return chart.mark_point(filled=True).encode(
             x=alt.X('VN_ax:Q', axis=alt.Axis(title='Tansversal Acceleration [m/s²]'), scale=alt.Scale(domain=[-domain, domain])),
             y=alt.Y('VN_ay:Q', axis=alt.Axis(title='Longitudinal Acceleration [m/s²]'), scale=alt.Scale(domain=[-domain, domain])),
             color=alt.Color('laps:N', scale=alt.Scale(scheme='tableau10')),

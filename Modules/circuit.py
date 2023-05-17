@@ -220,7 +220,7 @@ class CircuitChart(Circuit):
             )
             tooltip_labels = {'sector': 'Microsector' if microsectors else 'Sector'}
         else:
-            domain = most_extreme if (most_extreme:=max(abs(df["delta"].min()), abs(df["delta"].max()))) < 4000 else min(abs(df["delta"].min()), abs(df["delta"].max()))
+            domain = np.max(np.abs(df["delta"].quantile([0.05, 0.95]).values.tolist()))
             color = alt.Color(
                 "delta:Q",
                 scale=alt.Scale(scheme='blueorange', domain=[-domain, domain]),
