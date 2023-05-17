@@ -80,7 +80,7 @@ except FileNotFoundError:
     turns_json = None
 
 with run_panel:
-    radars_panel, smoothness_panel = st.columns(2)
+    radars_panel, harshness_panel = st.columns(2)
     with radars_panel:
         if lapA_selector == '<select>':
             mean_v_chart, out_v_chart, braking_point_chart = RUN_OBJECTS_DICT[run_selector].braking_charts(turns_json)
@@ -97,17 +97,17 @@ with run_panel:
 
         st.altair_chart(braking_point_chart)
 
-    with smoothness_panel:
+    with harshness_panel:
         if lapA_selector == '<select>':
-            throttle_smoothness_chart = RUN_OBJECTS_DICT[run_selector].throttle_smoothness_chart()
-            steering_smoothness_chart = RUN_OBJECTS_DICT[run_selector].steering_smoothness_chart()
+            throttle_harshness_chart = RUN_OBJECTS_DICT[run_selector].throttle_harshness_chart()
+            steering_harshness_chart = RUN_OBJECTS_DICT[run_selector].steering_harshness_chart()
         else:
             lap_numbers = [lapA_selector, lapB_selector] if lapB_selector != '<select>' else [int(lapA_selector)]
-            throttle_smoothness_chart = RUN_OBJECTS_DICT[run_selector].throttle_smoothness_chart(laps=lap_numbers)
-            steering_smoothness_chart = RUN_OBJECTS_DICT[run_selector].steering_smoothness_chart(laps=lap_numbers)
+            throttle_harshness_chart = RUN_OBJECTS_DICT[run_selector].throttle_harshness_chart(laps=lap_numbers)
+            steering_harshness_chart = RUN_OBJECTS_DICT[run_selector].steering_harshness_chart(laps=lap_numbers)
 
-        st.altair_chart(throttle_smoothness_chart.properties(height=300), use_container_width=True)
-        st.altair_chart(steering_smoothness_chart.properties(height=300), use_container_width=True)
+        st.altair_chart(throttle_harshness_chart.properties(height=300), use_container_width=True)
+        st.altair_chart(steering_harshness_chart.properties(height=300), use_container_width=True)
 
 # ---------- LAP PANEL ----------
 if lapA_selector != '<select>':

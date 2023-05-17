@@ -16,7 +16,7 @@ class Steering:
         self._smoothed_steering = smooth(self._steering, **kwargs)
 
         self._angle_difference_to_smoothed = abs(self._steering - self._smoothed_steering)
-        self.smoothness = np.trapz(self._angle_difference_to_smoothed, self._time)
+        self.harshness = np.trapz(self._angle_difference_to_smoothed, self._time)
 
     
     def chart(self):

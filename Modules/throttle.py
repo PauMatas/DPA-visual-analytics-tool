@@ -16,7 +16,7 @@ class Throttle:
         self._smoothed_throttle = smooth(self._throttle, **kwargs)
 
         self._throttle_difference_to_smoothed = abs(self._throttle - self._smoothed_throttle)/100
-        self.smoothness = np.trapz(self._throttle_difference_to_smoothed, self._time)
+        self.harshness = np.trapz(self._throttle_difference_to_smoothed, self._time)
 
     
     def chart(self):
