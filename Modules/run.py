@@ -107,47 +107,46 @@ class Run:
         elif microsectors:
             positionsA = self.laps[lapA].df[self.laps[lapA].df['microsector'].isin(sector)][['xPosition', 'yPosition']]
             positionsB = self.laps[lapB].df[self.laps[lapB].df['microsector'].isin(sector)][['xPosition', 'yPosition']]
-            start = circuit.middle_curve.t[-1] * sector[0] / circuit.N_MICROSECTORS
-            end = circuit.middle_curve.t[-1] * (sector[-1] + 1) / circuit.N_MICROSECTORS
+            start = circuit.middle_curve.t[-1] * (sector[0] - 1) / circuit.N_MICROSECTORS
+            end = circuit.middle_curve.t[-1] * sector[-1] / circuit.N_MICROSECTORS
             intervals = int(np.ceil(100 * (end-start) / (circuit.middle_curve.t[-1] - circuit.middle_curve.t[0])))
         else:
             positionsA = self.laps[lapA].df[self.laps[lapA].df['sector'] == sector][['xPosition', 'yPosition']]
             positionsB = self.laps[lapB].df[self.laps[lapB].df['sector'] == sector][['xPosition', 'yPosition']]
-            start = circuit.middle_curve.t[-1] * sector / circuit.N_SECTORS
-            end = circuit.middle_curve.t[-1] * (sector + 1) / circuit.N_SECTORS
+            start = circuit.middle_curve.t[-1] * (sector - 1) / circuit.N_SECTORS
+            end = circuit.middle_curve.t[-1] * sector / circuit.N_SECTORS
             intervals = int(np.ceil(100 * (end-start) / (circuit.middle_curve.t[-1] - circuit.middle_curve.t[0])))
 
         lapA_kdtree = KDTree(positionsA)
         lapB_kdtree = KDTree(positionsB)
 
         delta = []
+        covered_distance = []
+        circuit_length = self.laps[lapA].df['dist1'].sum()
         for i in range(intervals):
             door = circuit.middle_curve(start + ((end - start) * (i+1)/intervals))
             Ai = lapA_kdtree.query([door])[1][0][0]
             Bi = lapB_kdtree.query([door])[1][0][0]
-            delta.append(self.laps[lapA].df['delta'][:Ai].sum() - self.laps[lapB].df['delta'][:Bi].sum())
-        
+            if self.laps[lapA].df['microsector'][Ai] == self.laps[lapB].df['microsector'][Bi]:
+                delta.append(self.laps[lapA].df['delta'][:Ai].sum() - self.laps[lapB].df['delta'][:Bi].sum())
+                covered_distance.append(((start + ((end - start) * (i+1)/intervals))/circuit.middle_curve.t[-1]) * circuit_length)
+
         data = pd.DataFrame({
             'delta': delta,
-            'bin': list(range(intervals)),
+            'dist': covered_distance,
             'color': ['lapB' if d > 0 else 'lapA' for d in delta]
         })
+        domain = np.max(np.abs(data['delta'].quantile([0.05, 0.95]).values.tolist()))
 
-        return alt.Chart(data).mark_bar().encode(
-            x=alt.X('delta:Q', axis=alt.Axis(title='Time difference [s]')),
-            y=alt.Y('bin:N', axis=None),
-            color=alt.condition(
-                alt.datum.delta != 0,
-                alt.Color(
+        return alt.Chart(data).mark_area(fillOpacity=0.75).encode(
+                x=alt.X('dist:Q', axis=alt.Axis(title='Distance covered [m]')),
+                y=alt.Y('delta:Q', impute={'value': 0}, axis=alt.Axis(title='Time difference [s]'), scale=alt.Scale(domain=[-domain, domain])),
+                color=alt.Color(
                     'color:N',
                     scale=alt.Scale(scheme='tableau10'),
                     legend=alt.Legend(title='Fastest lap'),
-                    ),
-                alt.value('yellow')
-            ),
-            order='bin:Q',
-            tooltip=['delta:Q']
-        ).properties(
-            height=350,
-            title=f'Lap {lapA} time - Lap {lapB} time along track',
-        )
+                ),
+                tooltip=['delta:Q']
+            ).properties(
+                title=f'Lap {lapA} time - Lap {lapB} time along track',
+            )
