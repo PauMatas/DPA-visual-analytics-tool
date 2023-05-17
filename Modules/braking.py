@@ -1,7 +1,7 @@
 import pandas as pd
 
 
-def get_breaking_stats(turns_json: list, laps: list, run_df: pd.DataFrame, lap_map: list, lap_idxs: list = []) -> tuple[list]:
+def get_braking_stats(turns_json: list, laps: list, run_df: pd.DataFrame, lap_map: list, lap_idxs: list = []) -> tuple[list]:
     if lap_idxs:
         laps = [laps[i] for i in lap_idxs]
         lap_map = [lap_map[i] for i in lap_idxs]
@@ -10,7 +10,7 @@ def get_breaking_stats(turns_json: list, laps: list, run_df: pd.DataFrame, lap_m
     lines = []
     mean_v = []
     out_v = []
-    distance_before_breaking = []
+    distance_before_braking = []
 
     for turn in turns_json:
         for lap_number, lap_diff in zip(laps, lap_map):
@@ -30,6 +30,6 @@ def get_breaking_stats(turns_json: list, laps: list, run_df: pd.DataFrame, lap_m
                 lines.append(lap_number)
                 mean_v.append(df['Velocity'].mean())
                 out_v.append(df['Velocity'].values[-1])
-                distance_before_breaking.append(pre_break_dist)
+                distance_before_braking.append(pre_break_dist)
 
-    return axis_names, axis_idxs, lines, mean_v, out_v, distance_before_breaking
+    return axis_names, axis_idxs, lines, mean_v, out_v, distance_before_braking

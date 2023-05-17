@@ -83,10 +83,10 @@ with run_panel:
     radars_panel, smoothness_panel = st.columns(2)
     with radars_panel:
         if lapA_selector == '<select>':
-            mean_v_chart, out_v_chart, breaking_point_chart = RUN_OBJECTS_DICT[run_selector].breaking_charts(turns_json)
+            mean_v_chart, out_v_chart, braking_point_chart = RUN_OBJECTS_DICT[run_selector].braking_charts(turns_json)
         else:
             lap_numbers = [int(lapA_selector) - 1, int(lapB_selector) - 1] if lapB_selector != '<select>' else [int(lapA_selector) - 1]
-            mean_v_chart, out_v_chart, breaking_point_chart = RUN_OBJECTS_DICT[run_selector].breaking_charts(turns_json, laps=lap_numbers)
+            mean_v_chart, out_v_chart, braking_point_chart = RUN_OBJECTS_DICT[run_selector].braking_charts(turns_json, laps=lap_numbers)
         
         columns = st.columns(2)
         with columns[0]:
@@ -95,10 +95,7 @@ with run_panel:
         with columns[1]:
             st.altair_chart(out_v_chart)
 
-        # breaking point chart centered in the middle of the container
-        _, column, _ = st.columns([1,3,1])
-        with column:
-            st.altair_chart(breaking_point_chart)
+        st.altair_chart(braking_point_chart)
 
     with smoothness_panel:
         if lapA_selector == '<select>':

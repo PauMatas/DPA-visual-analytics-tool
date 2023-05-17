@@ -7,7 +7,7 @@ from sklearn.neighbors import KDTree
 from tilke import Circuit
 
 from .lap import Lap
-from .breaking import get_breaking_stats
+from .braking import get_braking_stats
 from .radarchart import RadarChart
 
 class Run:
@@ -83,12 +83,28 @@ class Run:
             tooltip=['lap', 'laptime', 'driver']
         )
     
-    def breaking_charts(self, turns_json: list[dict], chart_sections: int = 4, laps: list = []) -> tuple[alt.Chart]:
+    def braking_charts(self, turns_json: list[dict], chart_sections: int = 4, laps: list = []) -> tuple[alt.Chart]:
         radars = []
-        axis_names, axis_idxs, lines, mean_v, out_v, distance_before_breaking = get_breaking_stats(turns_json, [lap.number for lap in self.laps], self.df, self.lap_map, lap_idxs=laps)
-        for metric, title in zip([mean_v, out_v, distance_before_breaking], ['Mean velocity [m/s]', 'Velocity at the exit of the turn [m/s]', 'Distance before breaking once in the turn [m]']):
+        axis_names, axis_idxs, lines, mean_v, out_v, distance_before_braking = get_braking_stats(turns_json, [lap.number for lap in self.laps], self.df, self.lap_map, lap_idxs=laps)
+        for metric, title in zip([mean_v, out_v], ['Mean velocity [m/s]', 'Velocity at the exit of the turn [m/s]']):
             df = pd.DataFrame({'axis_name': axis_names, 'axis': axis_idxs, 'line': lines, 'metric': metric})
             radars.append(RadarChart(df, chart_sections).chart.properties(title=title))
+
+        distance_before_braking_df = pd.DataFrame({'turn': axis_names, 'turn_id': axis_idxs, 'lap': lines, 'distance': distance_before_braking})
+        radars.append(
+            alt.Chart(distance_before_braking_df).mark_point(filled=True).encode(
+                column=alt.Column('turn:N', sort=axis_idxs, title=None),
+                y=alt.Y('distance:Q', title=None),
+                color=alt.Color('lap:N', scale=alt.Scale(scheme='tableau10'), legend=alt.Legend(title='Lap number')),
+                tooltip=['turn', 'lap', 'distance']
+            ).resolve_scale(
+                y='independent'
+            ).properties(
+                title='Distance before braking once in the turn [m]',
+                width=228//len(np.unique(axis_idxs)),
+                height=200,
+            )
+        )
         
         return tuple(radars)
     
