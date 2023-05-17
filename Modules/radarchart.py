@@ -23,13 +23,14 @@ class RadarChart:
         self.df = df
         self.n_ticks = n_ticks
         self.width = kwargs.get('width', 250)
-        self.height = kwargs.get('height', 250)
+        self.height = kwargs.get('height', 300)
 
         assert(self.df.axis.min() == 0)
         self.line_min = self.df.line.min()
         self.n_axis = len(self.df['axis'].unique())
         self.n_lines = self.df['line'].unique()
-        self.max_value = int(self.df.metric.max()*1.2)
+        self.max_value = int(self.df.metric.max()*1.05)
+        self.min_value = int(self.df.metric.min()*0.95)
 
         self._add_line_closing()
         self._add_axis_ticks()
@@ -40,7 +41,10 @@ class RadarChart:
         self._axis = self._axis_chart()
         self._radars = self._radars_chart()
 
-        self.chart = self._background + self._radars + self._axis
+        self.chart = (self._background + self._radars + self._axis).properties(
+            width=self.width,
+            height=self.height
+        )
 
     def _add_line_closing(self):
         """
@@ -55,7 +59,7 @@ class RadarChart:
         Add axis ticks to the dataframe.
         """
         json = []
-        for i in [i * self.max_value / self.n_ticks for i in range(1, self.n_ticks + 1)]:
+        for i in [self.min_value + (i * (self.max_value - self.min_value) / self.n_ticks) for i in range(0, self.n_ticks + 1)]:
             json.append({
                 'axis': 0,
                 'axis_name': self.df['axis_name'].iloc[0],
@@ -67,8 +71,8 @@ class RadarChart:
         """
         Add trigonometric coordinates to the dataframe.
         """
-        self.df['sin'] = [np.sin((x * 2 * np.pi + np.pi / 2) / (self.n_axis)) for x in self.df.axis]
-        self.df['cos'] = [np.cos((x * 2 * np.pi + np.pi / 2) / (self.n_axis)) for x in self.df.axis]
+        self.df['sin'] = [np.sin(((-x) * 2 * np.pi / self.n_axis) + np.pi / 2) for x in self.df.axis]
+        self.df['cos'] = [np.cos(((-x) * 2 * np.pi / self.n_axis) + np.pi / 2) for x in self.df.axis]
 
     def _background_chart(self):
         return self._background_gray() + self._background_lines()
@@ -77,8 +81,8 @@ class RadarChart:
         return alt.Chart(self.df).transform_filter(
             (alt.datum.line == self.line_min)
         ).transform_calculate(
-            dx=self.max_value * alt.datum.cos,
-            dy=self.max_value * alt.datum.sin
+            dx=(self.max_value - self.min_value) * alt.datum.cos,
+            dy=(self.max_value - self.min_value) * alt.datum.sin
         ).mark_line(strokeWidth=0, fillOpacity=0.1, fill='gray').encode(
             x=alt.X("dx:Q", axis=None),
             y=alt.Y("dy:Q", axis=None),
@@ -91,7 +95,7 @@ class RadarChart:
     def _background_lines(self):
         lines = alt.LayerChart()
 
-        for i in [i * self.max_value / self.n_ticks for i in range(1, self.n_ticks + 1)]:
+        for i in [i * (self.max_value - self.min_value) / self.n_ticks for i in range(1, self.n_ticks + 1)]:
             lines += alt.Chart(self.df).transform_filter(
                 (alt.datum.line == self.line_min)
             ).transform_calculate(
@@ -118,8 +122,8 @@ class RadarChart:
             radii += alt.Chart(self.df).transform_filter(
                 (alt.datum.line == self.line_min)
             ).transform_calculate(
-                dx=(alt.datum.axis == axis) * (self.max_value * alt.datum.cos),
-                dy=(alt.datum.axis == axis) * (self.max_value * alt.datum.sin)
+                dx=(alt.datum.axis == axis) * ((self.max_value - self.min_value) * alt.datum.cos),
+                dy=(alt.datum.axis == axis) * ((self.max_value - self.min_value) * alt.datum.sin)
             ).mark_line(strokeWidth=1, strokeOpacity = 0.5, color="black").encode(
                 x=alt.X("dx:Q", axis=None),
                 y=alt.Y("dy:Q", axis=None),
@@ -134,8 +138,8 @@ class RadarChart:
         return alt.Chart(self.df).transform_filter(
             (alt.datum.line == -1) 
         ).transform_calculate(
-            dx=alt.datum.metric * alt.datum.cos + 5,
-            dy=alt.datum.metric * alt.datum.sin,
+            dx=(alt.datum.metric - self.min_value) * alt.datum.cos + 0.1 * (self.max_value - self.min_value),
+            dy=(alt.datum.metric - self.min_value) * alt.datum.sin,
             text=alt.datum.metric
         ).mark_text(fontStyle="bold", color="black").encode(
             x=alt.X("dx:Q", axis=None),
@@ -151,8 +155,8 @@ class RadarChart:
         return alt.Chart(self.df).transform_filter(
             (alt.datum.line == self.line_min) 
         ).transform_calculate(
-            dx=(self.max_value * alt.datum.cos + alt.datum.cos) * 1.1,
-            dy=(self.max_value * alt.datum.sin + alt.datum.sin) * 1.1,
+            dx=((self.max_value - self.min_value) * alt.datum.cos + alt.datum.cos) * 1.1,
+            dy=((self.max_value - self.min_value) * alt.datum.sin + alt.datum.sin) * 1.1,
             text=alt.datum.axis
         ).mark_text(fontStyle="bold").encode(
             x=alt.X("dx:Q", axis=None),
@@ -168,8 +172,8 @@ class RadarChart:
         return alt.Chart(self.df).transform_filter(
             (alt.datum.line == line)
         ).transform_calculate(
-            dx=alt.datum.metric * alt.datum.cos,
-            dy=alt.datum.metric * alt.datum.sin,
+            dx=(alt.datum.metric - self.min_value) * alt.datum.cos,
+            dy=(alt.datum.metric - self.min_value) * alt.datum.sin,
         ).mark_line(strokeWidth=2, strokeOpacity=1, color=COLORS[color]).encode(
             x=alt.X("dx:Q", axis=None),
             y=alt.Y("dy:Q", axis=None),
@@ -186,4 +190,3 @@ class RadarChart:
             radars += self._radar_chart(line, color=i)
 
         return radars
-

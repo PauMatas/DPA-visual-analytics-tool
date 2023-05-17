@@ -86,7 +86,7 @@ class Run:
     def breaking_charts(self, turns_json: list[dict], chart_sections: int = 4, laps: list = []) -> tuple[alt.Chart]:
         radars = []
         axis_names, axis_idxs, lines, mean_v, out_v, distance_before_breaking = get_breaking_stats(turns_json, [lap.number for lap in self.laps], self.df, self.lap_map, lap_idxs=laps)
-        for metric, title in zip([mean_v, out_v, distance_before_breaking], ['Mean velocity', 'Velocity at the exit of the turn', 'Distance before breaking once in the turn']):
+        for metric, title in zip([mean_v, out_v, distance_before_breaking], ['Mean velocity [m/s]', 'Velocity at the exit of the turn [m/s]', 'Distance before breaking once in the turn [m]']):
             df = pd.DataFrame({'axis_name': axis_names, 'axis': axis_idxs, 'line': lines, 'metric': metric})
             radars.append(RadarChart(df, chart_sections).chart.properties(title=title))
         
