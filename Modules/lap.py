@@ -34,7 +34,6 @@ class Lap:
         # Controls
         self.steering = Steering(df)
         self.throttle = Throttle(df)
-        self.breaking_points = self.breaking_points()
 
         # Vector Nav
         df['dist1'] -= df['dist1'].min()
@@ -73,24 +72,10 @@ class Lap:
 
         return pd.DataFrame(changing_points)
     
-    def breaking_points(self) -> list:
-        # TODO: no breaking column in this dataset
-        # previous = False
-        # breaking_points = []
-
-        # for i, (_, row) in enumerate(self.df['BPE'].items()):
-        #     if previous is False and row >= 3: # 3bar?
-        #         breaking_points.append(self.df['dist1'][i])
-        #         previous = True
-        #     elif previous is True and row < 3:
-        #         previous = False
-                
-        # return breaking_points
-        return []
-    
     # CHARTS
     
     def gg_diagram(self, sector: int | tuple = None) -> alt.Chart:
+        domain = np.max(np.abs(self.df[['VN_ax', 'VN_ay']].values))
         microsectors = False
         if isinstance(sector, tuple):
             microsectors = True
@@ -103,8 +88,8 @@ class Lap:
         sector_title = f"- Microsector{f's {sector[0]} to {sector[-1]}' if len(sector)>1 else f' {sector[0]}'}" if microsectors else f'- Sector {sector}'
 
         return chart.mark_point().encode(
-            x=alt.X('VN_ax:Q', axis=alt.Axis(title='Tansversal Acceleration [m/s²]')),
-            y=alt.Y('VN_ay:Q', axis=alt.Axis(title='Longitudinal Acceleration [m/s²]')),
+            x=alt.X('VN_ax:Q', axis=alt.Axis(title='Tansversal Acceleration [m/s²]'), scale=alt.Scale(domain=[-domain, domain])),
+            y=alt.Y('VN_ay:Q', axis=alt.Axis(title='Longitudinal Acceleration [m/s²]'), scale=alt.Scale(domain=[-domain, domain])),
             color=alt.Color('laps:N', scale=alt.Scale(scheme='tableau10')),
             tooltip=['TimeStamp', 'VN_ax', 'VN_ay']
         ).properties(
