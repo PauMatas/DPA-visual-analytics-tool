@@ -5,7 +5,7 @@ import altair as alt
 from tilke import Circuit, Spline
 
 
-def spline_chart_df(spline: Spline | np.ndarray, precision: int = 1000, showcones: bool = True, curve_name: str = "N/D") -> tuple[pd.DataFrame]:
+def spline_chart_df(spline: Spline | np.ndarray, info: list = ['None'], precision: int = 1000, showcones: bool = True, curve_name: str = "N/D") -> tuple[pd.DataFrame]:
         """Plots a given spline with it's highlighted points and true cones
 
         Arguments:
@@ -27,6 +27,15 @@ def spline_chart_df(spline: Spline | np.ndarray, precision: int = 1000, showcone
         lines_df = pd.DataFrame(gamma, columns=["x", "y"])
         lines_df['index'] = lines_df.index
         lines_df['curve'] = curve_name
+        sectors = []
+        sector_idx = []
+        for i, sector in enumerate(info):
+            sectors += [sector] * (len(lines_df) // len(info))
+            sector_idx += [i] * (len(lines_df) // len(info))
+        sectors += [info[-1]] * (len(lines_df) - len(sectors))
+        sector_idx += [i] * (len(lines_df) - len(sector_idx))
+        lines_df['sector'] = sectors
+        lines_df['sector_idx'] = sector_idx
         
         return lines_df
 
@@ -56,15 +65,15 @@ class CircuitChart(Circuit):
         super().__init__(*args, **kwargs)
         self.set_sectors()
 
-    def chart(self, middle_curve_df: pd.DataFrame = None, important_points: pd.DataFrame = None, sector: int | tuple = None) -> alt.Chart:
+    def chart(self, middle_curve_df: pd.DataFrame = None, important_points: pd.DataFrame = None, sector: int | tuple = None, info: list = ['None']) -> alt.Chart:
         """Charts the circuit layout
 
         Arguments:
             self (Circuit) : the object itself
             middle_curve_df (pd.DataFrame) : the dataframe containing the middle curve
             important_points (pd.DataFrame) : the dataframe containing the important points
-            sector (int) : the sector to be plotted
-            microsectors (bool) : if true plots the microsectors
+            sector (int | tuple) : the sector or microsectors to be plotted
+            info (list) : the list of the color info to be displayed
         Returns:
             chart (alt.Chart) : the chart of the circuit layout
         """
@@ -81,23 +90,44 @@ class CircuitChart(Circuit):
         if middle_curve_df is None:
             curve_options["middle"] = sector_spline(self.middle_curve, sector=sector, microsectors=microsectors)
 
-        lines_df = pd.DataFrame(columns=["x", "y", "curve", "index"]) if middle_curve_df is None else middle_curve_df
+        lines_df = pd.DataFrame(columns=["x", "y", "curve", "index", "sector"]) if middle_curve_df is None else middle_curve_df
+        if info != ['None'] and middle_curve_df is not None:
+            sectors = []
+            sector_idx = []
+            for i, sector in enumerate(info):
+                sectors += [sector] * (len(lines_df) // len(info))
+                sector_idx += [i] * (len(lines_df) // len(info))
+            sectors += [info[-1]] * (len(lines_df) - len(sectors))
+            sector_idx += [i] * (len(lines_df) - len(sector_idx))
+            lines_df['sector'] = sectors
+            lines_df['sector_idx'] = sector_idx
         for curve_name, curve in curve_options.items():
             if curve is not None:
-                lines_df = pd.concat([lines_df, spline_chart_df(curve, curve_name=curve_name)])
+                lines_df = pd.concat([lines_df, spline_chart_df(curve, info=info, curve_name=curve_name)])
 
         chart_title = "Circuit Layout" if middle_curve_df is None else "Racing Line and Track Limits"
+
+        if info == ['None']:
+            color = alt.Color("curve:N", scale=alt.Scale(
+                        range=['black', 'grey', 'black', '#4E79A7', '#F28E2B'],
+                        domain=['interior', 'middle', 'exterior', 'lapA', 'lapB']),
+                        legend=None)
+        else:
+            color = alt.condition(
+                        ((alt.datum.curve != "interior") & (alt.datum.curve != "exterior")),
+                        alt.Color("sector:N",
+                            scale=alt.Scale(range=["purple", "green", "yellow"], domain=["best", "personal_best", "other"]),
+                            legend=alt.Legend(title="Time Info")),
+                        alt.value("black")
+                    )
 
         chart = (
             alt.Chart(lines_df).mark_line().encode(
                 x=alt.X("x:Q", axis=None),
                 y=alt.Y("y:Q", axis=None),
-                color=alt.Color("curve:N", scale=alt.Scale(
-                    range=['black', 'grey', 'black', '#4E79A7', '#F28E2B'],
-                    domain=['interior', 'middle', 'exterior', 'lapA', 'lapB']),
-                    legend=None),
+                color=color,
                 order="index:O",
-                detail="curve:N",
+                detail=alt.Detail(["curve:N", "sector_idx:N"]),
             ).properties(
                 title=chart_title,
             )
@@ -216,7 +246,6 @@ class CircuitChart(Circuit):
             color=alt.Color(
                 "delta:N",
                 scale=alt.Scale(range=["purple", "green", "yellow"], domain=["best", "personal_best", "other"]),
-                legend=None,
             )
             tooltip_labels = {'sector': 'Microsector' if microsectors else 'Sector'}
         else:
