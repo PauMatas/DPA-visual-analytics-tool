@@ -77,7 +77,7 @@ class Run:
     def _harshness_chart(self, df) -> alt.Chart:
         return alt.Chart(df).mark_point(filled=True).encode(
             y = alt.Y('laptime:Q', axis=alt.Axis(title='Laptime [s]')),
-            x = alt.X('harshness:Q', axis=alt.Axis(title='Harshness')),
+            x = alt.X('harshness:Q', axis=alt.Axis(title='Harshness'), scale=alt.Scale(zero=False)),
             color = alt.Color('lap:N', scale=alt.Scale(scheme='tableau10'), legend=alt.Legend(title='Lap number')),
             shape=alt.Shape('driver:N', legend=alt.Legend(title='Driver')),
             tooltip=['lap', 'laptime', 'driver']
