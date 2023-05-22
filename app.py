@@ -218,8 +218,10 @@ with lap_panel:
                     sectors_comparison = compute_sectors_comparison(
                         info=RUN_OBJECTS_DICT[run_selector].info,
                         filenameA=RUN_OBJECTS_DICT[run_selector].laps[lapA_selector].filename,
+                        global_lapA=lapA_selector,
                         lapA=lapA_selector - RUN_OBJECTS_DICT[run_selector].lap_map[lapA_selector],
                         filenameB=RUN_OBJECTS_DICT[run_selector].laps[lapB_selector].filename,
+                        global_lapB=lapB_selector,
                         lapB=lapB_selector - RUN_OBJECTS_DICT[run_selector].lap_map[lapB_selector]
                         )
                     st.altair_chart(
@@ -311,8 +313,10 @@ with lap_panel:
                     microsectors_comparison = compute_sectors_comparison(
                         info=RUN_OBJECTS_DICT[run_selector].info,
                         filenameA=RUN_OBJECTS_DICT[run_selector].laps[lapA_selector].filename,
+                        global_lapA=lapA_selector,
                         lapA=lapA_selector - RUN_OBJECTS_DICT[run_selector].lap_map[lapA_selector],
                         filenameB=RUN_OBJECTS_DICT[run_selector].laps[lapB_selector].filename,
+                        global_lapB=lapB_selector,
                         lapB=lapB_selector - RUN_OBJECTS_DICT[run_selector].lap_map[lapB_selector],
                         microsectors=True
                         )

@@ -116,7 +116,7 @@ class CircuitChart(Circuit):
             color = alt.condition(
                         ((alt.datum.curve != "interior") & (alt.datum.curve != "exterior")),
                         alt.Color("sector:N",
-                            scale=alt.Scale(range=["purple", "green", "yellow"], domain=["best", "personal_best", "other"]),
+                            scale=alt.Scale(range=["purple", "green", "#e1d614"], domain=["best", "personal_best", "other"]),
                             legend=alt.Legend(title="Time Info")),
                         alt.value("black")
                     )
@@ -127,6 +127,14 @@ class CircuitChart(Circuit):
                 y=alt.Y("y:Q", axis=None),
                 color=color,
                 order="index:O",
+                strokeWidth=alt.condition(
+                    ((alt.datum.curve == "interior") | (alt.datum.curve == "exterior")),
+                    alt.value(0.5),
+                    alt.value(1.5)),
+                strokeOpacity=alt.condition(
+                    ((alt.datum.curve == "interior") | (alt.datum.curve == "exterior")),
+                    alt.value(0.5),
+                    alt.value(1)),
                 detail=alt.Detail(["curve:N", "sector_idx:N"]),
             ).properties(
                 title=chart_title,
@@ -245,15 +253,14 @@ class CircuitChart(Circuit):
         if 'best' in df["delta"].unique().tolist() or 'personal_best' in df["delta"].unique().tolist() or 'other' in df["delta"].unique().tolist():
             color=alt.Color(
                 "delta:N",
-                scale=alt.Scale(range=["purple", "green", "yellow"], domain=["best", "personal_best", "other"]),
+                scale=alt.Scale(range=["purple", "green", "#e1d614"], domain=["best", "personal_best", "other"]),
             )
             tooltip_labels = {'sector': 'Microsector' if microsectors else 'Sector'}
         else:
-            domain = np.max(np.abs(df["delta"].quantile([0.05, 0.95]).values.tolist()))
-            color = alt.Color(
-                "delta:Q",
-                scale=alt.Scale(scheme='blueorange', domain=[-domain, domain]),
-                legend=alt.Legend(title="Lap A time - Lap B time [ms]"),
+            color = alt.condition(
+                alt.datum.delta != -1,
+                alt.Color("delta:N", scale=alt.Scale(scheme="tableau10"), legend=alt.Legend(title=f"Lap number")),
+                alt.value("grey"),
             )
             tooltip_labels = {'delta': 'LapA time-LapB time', 'sector': 'Microsector' if microsectors else 'Sector'}
 
@@ -267,10 +274,7 @@ class CircuitChart(Circuit):
                 alt.datum.curve == "middle",
                 alt.value(10),
                 alt.value(1)),
-            strokeOpacity=alt.condition(
-                alt.datum.curve == "middle",
-                alt.value(0.5),
-                alt.value(1)),
+            strokeOpacity=alt.value(1),
             tooltip=[alt.Tooltip(field=field, title=label) for field, label in tooltip_labels.items()],
         ).properties(
             title=f"Fastest lap per {'microsector' if microsectors else 'sector'}"

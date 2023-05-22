@@ -149,6 +149,7 @@ class Run:
         lapB_kdtree = KDTree(positionsB)
 
         delta = []
+        color = []
         covered_distance = []
         circuit_length = self.laps[lapA].df['dist1'].sum()
         for i in range(intervals):
@@ -157,12 +158,13 @@ class Run:
             Bi = lapB_kdtree.query([door])[1][0][0]
             if self.laps[lapA].df['microsector'][Ai] == self.laps[lapB].df['microsector'][Bi]:
                 delta.append(self.laps[lapA].df['delta'][:Ai].sum() - self.laps[lapB].df['delta'][:Bi].sum())
+                color.append(-1 if delta[-1] == 0 else (lapA if delta[-1] < 0 else lapB))
                 covered_distance.append(((start + ((end - start) * (i+1)/intervals))/circuit.middle_curve.t[-1]) * circuit_length)
 
         data = pd.DataFrame({
             'delta': delta,
             'dist': covered_distance,
-            'color': ['lapB' if d > 0 else 'lapA' for d in delta]
+            'color': color
         })
         domain = np.max(np.abs(data['delta'].quantile([0.05, 0.95]).values.tolist()))
 

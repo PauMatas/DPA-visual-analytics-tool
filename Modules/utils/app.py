@@ -20,7 +20,7 @@ def compute_sectors_deltas(info: dict, filename: str, lap: int, microsectors: bo
         for t, bt, pbt in zip(lap_times, best_times, personal_best_times)
     ]
 
-def compute_sectors_comparison(info: dict, filenameA: str, lapA: int, filenameB: str, lapB: int, microsectors: bool = False) -> list:
+def compute_sectors_comparison(info: dict, filenameA: str, global_lapA: int, lapA: int, filenameB: str, global_lapB: int, lapB: int, microsectors: bool = False) -> list:
     """
     Compute sector deltas: This function returns a list with different values for each sector of the lap.
     The value of a sector will be 'lapA' if lap A has the best time for that sector and 'lapB' if it is
@@ -33,7 +33,7 @@ def compute_sectors_comparison(info: dict, filenameA: str, lapA: int, filenameB:
     lapB_times = info[filenameB]['laps'][str(lapB)][segments]
 
     return [
-        tA - tB
+        -1 if tA == tB else (global_lapA if tA < tB else global_lapB)
         for tA, tB in zip(lapA_times, lapB_times)
     ]
 
