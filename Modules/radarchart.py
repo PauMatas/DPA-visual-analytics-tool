@@ -86,7 +86,8 @@ class RadarChart:
         ).mark_line(strokeWidth=0, fillOpacity=0.1, fill='gray').encode(
             x=alt.X("dx:Q", axis=None),
             y=alt.Y("dy:Q", axis=None),
-            order="axis:Q"
+            order="axis:Q",
+            tooltip=alt.value(None)
         ).properties(
             width=self.width,
             height=self.height
@@ -104,7 +105,8 @@ class RadarChart:
             ).mark_line(strokeDash=[5, 5], strokeWidth=1, strokeOpacity=0.5, color='gray').encode(
                 x=alt.X("dx:Q", axis=None),
                 y=alt.Y("dy:Q", axis=None),
-                order="axis:Q"
+                order="axis:Q",
+                tooltip=alt.value(None)
             ).properties(
                 width=self.width,
                 height=self.height
@@ -127,7 +129,8 @@ class RadarChart:
             ).mark_line(strokeWidth=1, strokeOpacity = 0.5, color="black").encode(
                 x=alt.X("dx:Q", axis=None),
                 y=alt.Y("dy:Q", axis=None),
-                order="axis:Q"
+                order="axis:Q",
+                tooltip=alt.value(None)
             ).properties(
                 width=self.width,
                 height=self.height
@@ -145,7 +148,8 @@ class RadarChart:
             x=alt.X("dx:Q", axis=None),
             y=alt.Y("dy:Q", axis=None),
             order="axis:Q",
-            text="metric:Q"
+            text="metric:Q",
+            tooltip=alt.value(None)
         ).properties(
             width=self.width,
             height=self.height
@@ -162,7 +166,8 @@ class RadarChart:
             x=alt.X("dx:Q", axis=None),
             y=alt.Y("dy:Q", axis=None),
             order="axis:Q",
-            text="axis_name"
+            text="axis_name",
+            tooltip=alt.value(None)
         ).properties(
             width=self.width,
             height=self.height
@@ -178,7 +183,7 @@ class RadarChart:
             x=alt.X("dx:Q", axis=None),
             y=alt.Y("dy:Q", axis=None),
             order="axis",
-            tooltip="metric:Q"
+            tooltip=alt.Tooltip(["metric:Q", "line:N"])
         ).properties(
             width=self.width,
             height=self.height

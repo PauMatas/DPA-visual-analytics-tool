@@ -176,7 +176,7 @@ class Run:
                 color=alt.Color(
                     'color:N',
                     scale=alt.Scale(scheme='tableau10'),
-                    legend=alt.Legend(title='Fastest lap'),
+                    legend=alt.Legend(title='Lap number'),
                 ),
                 tooltip=['delta:Q']
             ) + rulers_chart).properties(
@@ -206,4 +206,5 @@ class Run:
 
         return alt.Chart(pd.DataFrame({'x': rulers})).mark_rule(strokeDash=[5, 5], strokeOpacity=0.5).encode(
             x='x:Q',
+            tooltip=alt.value(None)
         )
