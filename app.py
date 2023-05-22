@@ -31,7 +31,8 @@ for run in RUNS:
 # ---------- APP SETUP ----------
 st.set_page_config(
     page_title="DPA Visualization Tool",
-    page_icon="🏎",
+    page_icon=":checkered_flag:",
+    # page_icon="🏎",
     layout="wide",
     initial_sidebar_state="expanded",
 )
