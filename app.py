@@ -60,7 +60,7 @@ with st.sidebar:
         index=0
     )
     
-    lapB_options = set(range(len(RUN_OBJECTS_DICT[run_selector].laps))) - (set([int(lapA_selector)]) if lapA_selector != '<select>' else set())
+    lapB_options = set(range(len(RUN_OBJECTS_DICT[run_selector].laps))) - (set([lapA_selector]) if lapA_selector != '<select>' else set())
     lapB_options = ['<select>'] + list(lapB_options)
     lapB_selector = st.selectbox(
         'Select lap B',
@@ -86,46 +86,86 @@ except FileNotFoundError:
 with run_panel:
     st.divider()
     st.header('Run overview')
-    radars_panel, harshness_panel = st.columns([2,1])
-    with radars_panel:
-        if lapA_selector == '<select>':
-            mean_v_chart, out_v_chart, braking_point_chart = RUN_OBJECTS_DICT[run_selector].braking_charts(turns_json)
-        else:
-            lap_numbers = [int(lapA_selector) - 1, int(lapB_selector) - 1] if lapB_selector != '<select>' else [int(lapA_selector) - 1]
-            mean_v_chart, out_v_chart, braking_point_chart = RUN_OBJECTS_DICT[run_selector].braking_charts(turns_json, laps=lap_numbers)
-        
-        columns = st.columns(2)
-        with columns[0]:
-            st.altair_chart(mean_v_chart)
-        
-        with columns[1]:
-            st.altair_chart(out_v_chart)
 
-        st.altair_chart(braking_point_chart)
+    laps_tab, drivers_tab = st.tabs(['Laps', 'Drivers'])
 
-        with st.expander('Circuit Turns', expanded=False):
-            if turns_json is None:
-                st.write('No turns data available, please build the turns data for this run first.')
+    with laps_tab:
+        radars_panel, harshness_panel = st.columns([2,1])
+        with radars_panel:
+            if lapA_selector == '<select>':
+                mean_v_chart, out_v_chart, braking_point_chart = RUN_OBJECTS_DICT[run_selector].braking_charts(turns_json)
             else:
-                st.write('The following chart shows the circuit turns. These turns have been manually defined with microsectors, hovering the mouse over the chart you can see the turn number and the microsector number.')
-                circuit = CircuitChart(seed=int(run_selector.split(':')[1]), random_orientation=False)
-                st.altair_chart(
-                    circuit.turns_chart(turns_json=turns_json)
-                )
-                st.markdown('In order to change each turn microsectors modify the `turns.json` file in the run folder.')
+                lap_numbers = [lapA_selector, lapB_selector] if lapB_selector != '<select>' else [lapA_selector]
+                mean_v_chart, out_v_chart, braking_point_chart = RUN_OBJECTS_DICT[run_selector].braking_charts(turns_json, laps=lap_numbers)
+            
+            columns = st.columns(2)
+            with columns[0]:
+                st.altair_chart(mean_v_chart)
+            
+            with columns[1]:
+                st.altair_chart(out_v_chart)
+
+            st.altair_chart(braking_point_chart)
+
+            with st.expander('Circuit Turns', expanded=False):
+                if turns_json is None:
+                    st.write('No turns data available, please build the turns data for this run first.')
+                else:
+                    st.write('The following chart shows the circuit turns. These turns have been manually defined with microsectors, hovering the mouse over the chart you can see the turn number and the microsector number.')
+                    circuit = CircuitChart(seed=int(run_selector.split(':')[1]), random_orientation=False)
+                    st.altair_chart(
+                        circuit.turns_chart(turns_json=turns_json)
+                    )
+                    st.markdown('In order to change each turn microsectors modify the `turns.json` file in the run folder.')
 
 
-    with harshness_panel:
-        if lapA_selector == '<select>':
-            throttle_harshness_chart = RUN_OBJECTS_DICT[run_selector].throttle_harshness_chart()
-            steering_harshness_chart = RUN_OBJECTS_DICT[run_selector].steering_harshness_chart()
+        with harshness_panel:
+            if lapA_selector == '<select>':
+                throttle_harshness_chart = RUN_OBJECTS_DICT[run_selector].throttle_harshness_chart()
+                steering_harshness_chart = RUN_OBJECTS_DICT[run_selector].steering_harshness_chart()
+            else:
+                lap_numbers = [lapA_selector, lapB_selector] if lapB_selector != '<select>' else [lapA_selector]
+                throttle_harshness_chart = RUN_OBJECTS_DICT[run_selector].throttle_harshness_chart(laps=lap_numbers)
+                steering_harshness_chart = RUN_OBJECTS_DICT[run_selector].steering_harshness_chart(laps=lap_numbers)
+
+            st.altair_chart(throttle_harshness_chart.properties(height=300), use_container_width=True)
+            st.altair_chart(steering_harshness_chart.properties(height=300), use_container_width=True)
+
+    with drivers_tab:
+        if lapA_selector != '<select>':
+            st.warning('Drivers\' Run overview is not available when laps are selected.')
         else:
-            lap_numbers = [lapA_selector, lapB_selector] if lapB_selector != '<select>' else [int(lapA_selector)]
-            throttle_harshness_chart = RUN_OBJECTS_DICT[run_selector].throttle_harshness_chart(laps=lap_numbers)
-            steering_harshness_chart = RUN_OBJECTS_DICT[run_selector].steering_harshness_chart(laps=lap_numbers)
+            radars_panel, harshness_panel = st.columns([2,1])
+            with radars_panel:
+                mean_v_chart, out_v_chart, braking_point_chart = RUN_OBJECTS_DICT[run_selector].braking_charts(turns_json, drivers=True)
+                
+                columns = st.columns(2)
+                with columns[0]:
+                    st.altair_chart(mean_v_chart)
+                
+                with columns[1]:
+                    st.altair_chart(out_v_chart)
 
-        st.altair_chart(throttle_harshness_chart.properties(height=300), use_container_width=True)
-        st.altair_chart(steering_harshness_chart.properties(height=300), use_container_width=True)
+                st.altair_chart(braking_point_chart)
+
+                with st.expander('Circuit Turns', expanded=False):
+                    if turns_json is None:
+                        st.write('No turns data available, please build the turns data for this run first.')
+                    else:
+                        st.write('The following chart shows the circuit turns. These turns have been manually defined with microsectors, hovering the mouse over the chart you can see the turn number and the microsector number.')
+                        circuit = CircuitChart(seed=int(run_selector.split(':')[1]), random_orientation=False)
+                        st.altair_chart(
+                            circuit.turns_chart(turns_json=turns_json)
+                        )
+                        st.markdown('In order to change each turn microsectors modify the `turns.json` file in the run folder.')
+
+
+            with harshness_panel:
+                throttle_harshness_chart = RUN_OBJECTS_DICT[run_selector].throttle_harshness_chart(drivers=True)
+                steering_harshness_chart = RUN_OBJECTS_DICT[run_selector].steering_harshness_chart(drivers=True)
+
+                st.altair_chart(throttle_harshness_chart.properties(height=300), use_container_width=True)
+                st.altair_chart(steering_harshness_chart.properties(height=300), use_container_width=True)
 
 # ---------- LAP PANEL ----------
 if lapA_selector != '<select>':
@@ -164,10 +204,10 @@ with lap_panel:
                         circuit.track_chart(),
                     )
                 elif lapB_selector == '<select>':
-                    racing_line_df = RUN_OBJECTS_DICT[run_selector].laps[int(lapA_selector)].racing_line_df(curve_name='lapA', sector=(1,30))
+                    racing_line_df = RUN_OBJECTS_DICT[run_selector].laps[lapA_selector].racing_line_df(curve_name='lapA', sector=(1,30))
                     sectors_delta = compute_sectors_deltas(
                         info=RUN_OBJECTS_DICT[run_selector].info,
-                        filename=RUN_OBJECTS_DICT[run_selector].laps[int(lapA_selector)].filename,
+                        filename=RUN_OBJECTS_DICT[run_selector].laps[lapA_selector].filename,
                         lap=lapA_selector - RUN_OBJECTS_DICT[run_selector].lap_map[lapA_selector]
                     )
                     st.altair_chart(
@@ -177,9 +217,9 @@ with lap_panel:
                 else:
                     sectors_comparison = compute_sectors_comparison(
                         info=RUN_OBJECTS_DICT[run_selector].info,
-                        filenameA=RUN_OBJECTS_DICT[run_selector].laps[int(lapA_selector)].filename,
+                        filenameA=RUN_OBJECTS_DICT[run_selector].laps[lapA_selector].filename,
                         lapA=lapA_selector - RUN_OBJECTS_DICT[run_selector].lap_map[lapA_selector],
-                        filenameB=RUN_OBJECTS_DICT[run_selector].laps[int(lapB_selector)].filename,
+                        filenameB=RUN_OBJECTS_DICT[run_selector].laps[lapB_selector].filename,
                         lapB=lapB_selector - RUN_OBJECTS_DICT[run_selector].lap_map[lapB_selector]
                         )
                     st.altair_chart(
@@ -207,27 +247,27 @@ with lap_panel:
                         circuit.chart(sector=sector_idx),
                     )
                 elif lapB_selector == '<select>':
-                    racing_line_df = RUN_OBJECTS_DICT[run_selector].laps[int(lapA_selector)].racing_line_df(curve_name='lapA', sector=sector)
+                    racing_line_df = RUN_OBJECTS_DICT[run_selector].laps[lapA_selector].racing_line_df(curve_name='lapA', sector=sector)
                     sectors_delta = compute_sectors_deltas(
                         info=RUN_OBJECTS_DICT[run_selector].info,
-                        filename=RUN_OBJECTS_DICT[run_selector].laps[int(lapA_selector)].filename,
+                        filename=RUN_OBJECTS_DICT[run_selector].laps[lapA_selector].filename,
                         lap=lapA_selector - RUN_OBJECTS_DICT[run_selector].lap_map[lapA_selector]
                     )
                     st.altair_chart(
                         circuit.chart(middle_curve_df=racing_line_df, sector=sector_idx, info=[sectors_delta[sector_idx]]),
                     )
                 else:
-                    racing_line_df = RUN_OBJECTS_DICT[run_selector].laps[int(lapA_selector)].racing_line_df(curve_name='lapA', sector=sector)
-                    racing_line_df = pd.concat([racing_line_df, RUN_OBJECTS_DICT[run_selector].laps[int(lapB_selector)].racing_line_df(curve_name='lapB', sector=sector)])
+                    racing_line_df = RUN_OBJECTS_DICT[run_selector].laps[lapA_selector].racing_line_df(curve_name='lapA', sector=sector)
+                    racing_line_df = pd.concat([racing_line_df, RUN_OBJECTS_DICT[run_selector].laps[lapB_selector].racing_line_df(curve_name='lapB', sector=sector)])
                     st.altair_chart(
                         circuit.chart(middle_curve_df=racing_line_df, sector=sector_idx),
                     )
             
             with sector_gg_diagram:
                 if lapA_selector != '<select>':
-                    gg_diagram = RUN_OBJECTS_DICT[run_selector].laps[int(lapA_selector)].gg_diagram(sector=sector)
+                    gg_diagram = RUN_OBJECTS_DICT[run_selector].laps[lapA_selector].gg_diagram(sector=sector)
                     if lapB_selector != '<select>':
-                        gg_diagram += RUN_OBJECTS_DICT[run_selector].laps[int(lapB_selector)].gg_diagram(sector=sector)
+                        gg_diagram += RUN_OBJECTS_DICT[run_selector].laps[lapB_selector].gg_diagram(sector=sector)
                     st.altair_chart(gg_diagram, use_container_width=True)
 
     with microsectors:
@@ -256,10 +296,10 @@ with lap_panel:
                         circuit.track_chart(microsectors=True),
                     )
                 elif lapB_selector == '<select>':
-                    racing_line_df = RUN_OBJECTS_DICT[run_selector].laps[int(lapA_selector)].racing_line_df(curve_name='lapA', sector=(1,30))
+                    racing_line_df = RUN_OBJECTS_DICT[run_selector].laps[lapA_selector].racing_line_df(curve_name='lapA', sector=(1,30))
                     microsectors_delta = compute_sectors_deltas(
                         info=RUN_OBJECTS_DICT[run_selector].info,
-                        filename=RUN_OBJECTS_DICT[run_selector].laps[int(lapA_selector)].filename,
+                        filename=RUN_OBJECTS_DICT[run_selector].laps[lapA_selector].filename,
                         lap=lapA_selector - RUN_OBJECTS_DICT[run_selector].lap_map[lapA_selector],
                         microsectors=True
                         )
@@ -270,9 +310,9 @@ with lap_panel:
                 else:
                     microsectors_comparison = compute_sectors_comparison(
                         info=RUN_OBJECTS_DICT[run_selector].info,
-                        filenameA=RUN_OBJECTS_DICT[run_selector].laps[int(lapA_selector)].filename,
+                        filenameA=RUN_OBJECTS_DICT[run_selector].laps[lapA_selector].filename,
                         lapA=lapA_selector - RUN_OBJECTS_DICT[run_selector].lap_map[lapA_selector],
-                        filenameB=RUN_OBJECTS_DICT[run_selector].laps[int(lapB_selector)].filename,
+                        filenameB=RUN_OBJECTS_DICT[run_selector].laps[lapB_selector].filename,
                         lapB=lapB_selector - RUN_OBJECTS_DICT[run_selector].lap_map[lapB_selector],
                         microsectors=True
                         )
@@ -301,18 +341,18 @@ with lap_panel:
                         circuit.chart(sector=microsector_idx),
                     )
                 else:
-                    racing_line_df = RUN_OBJECTS_DICT[run_selector].laps[int(lapA_selector)].racing_line_df(curve_name='lapA', sector=microsector)
+                    racing_line_df = RUN_OBJECTS_DICT[run_selector].laps[lapA_selector].racing_line_df(curve_name='lapA', sector=microsector)
                     if lapB_selector != '<select>':
-                        racing_line_df = pd.concat([racing_line_df, RUN_OBJECTS_DICT[run_selector].laps[int(lapB_selector)].racing_line_df(curve_name='lapB', sector=microsector)])
+                        racing_line_df = pd.concat([racing_line_df, RUN_OBJECTS_DICT[run_selector].laps[lapB_selector].racing_line_df(curve_name='lapB', sector=microsector)])
                     st.altair_chart(
                         circuit.chart(middle_curve_df=racing_line_df, sector=microsector_idx),
                     )
             
             with microsector_gg_diagram:
                 if lapA_selector != '<select>':
-                    gg_diagram = RUN_OBJECTS_DICT[run_selector].laps[int(lapA_selector)].gg_diagram(sector=microsector)
+                    gg_diagram = RUN_OBJECTS_DICT[run_selector].laps[lapA_selector].gg_diagram(sector=microsector)
                     if lapB_selector != '<select>':
-                        gg_diagram += RUN_OBJECTS_DICT[run_selector].laps[int(lapB_selector)].gg_diagram(sector=microsector)
+                        gg_diagram += RUN_OBJECTS_DICT[run_selector].laps[lapB_selector].gg_diagram(sector=microsector)
                     st.altair_chart(gg_diagram, use_container_width=True)
 
 

@@ -288,6 +288,7 @@ class CircuitChart(Circuit):
         track_name = "middle"
         track = self.middle_curve
         legend_values = [turn["name"] for turn in turns_json]
+        turns_json_queue = turns_json.copy()
 
         df = pd.DataFrame(columns=["x", "y", "turn", "sector", "index", "curve"])
 
@@ -295,9 +296,9 @@ class CircuitChart(Circuit):
         end = track.t[-1]
         precision = 1000
         curve_df = pd.DataFrame(columns=["x", "y", "turn", "sector", "index"])
-        if not turns_json:
+        if not turns_json_queue:
             raise ValueError("There has to be at least one turn in the turns_json list")
-        current_turn = turns_json.pop(0)
+        current_turn = turns_json_queue.pop(0)
 
         for i in range(self.N_MICROSECTORS):
             sector_start = start if i == 0 else end * i/self.N_MICROSECTORS
@@ -311,8 +312,8 @@ class CircuitChart(Circuit):
                 sector_df["turn"] = current_turn["name"]
             else:
                 sector_df["turn"] = None
-            if i + 1 == current_turn["last_ms"] and turns_json:
-                    current_turn = turns_json.pop(0)
+            if i + 1 == current_turn["last_ms"] and turns_json_queue:
+                    current_turn = turns_json_queue.pop(0)
             curve_df = pd.concat([curve_df, sector_df])
 
         curve_df["curve"] = track_name

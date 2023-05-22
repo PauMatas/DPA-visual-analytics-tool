@@ -56,25 +56,33 @@ class Run:
         return sum
 
 
-    def steering_harshness_chart(self, laps: list[int] = None) -> alt.Chart:
+    def steering_harshness_chart(self, laps: list[int] = None, drivers: bool = False) -> alt.Chart:
         steering_json = [
             {'harshness': lap.steering.harshness, 'lap': lap.number, 'laptime': lap.laptime, 'driver': lap.driver}
             for lap in (self.laps if laps is None else [self.laps[i] for i in laps])
             if lap.laptime is not None
         ]
-        chart = self._harshness_chart(pd.DataFrame(steering_json))
+        chart = self._harshness_chart(pd.DataFrame(steering_json), drivers=drivers)
         return chart.properties(title='Steering harshness vs laptime')
     
-    def throttle_harshness_chart(self, laps: list[int] = None) -> alt.Chart:
+    def throttle_harshness_chart(self, laps: list[int] = None, drivers: bool = False) -> alt.Chart:
         throttle_json = [
             {'harshness': lap.throttle.harshness, 'lap': lap.number, 'laptime': lap.laptime, 'driver': lap.driver}
             for lap in (self.laps if laps is None else [self.laps[i] for i in laps])
             if lap.laptime is not None
         ]
-        chart = self._harshness_chart(pd.DataFrame(throttle_json))
+        chart = self._harshness_chart(pd.DataFrame(throttle_json), drivers=drivers)
         return chart.properties(title='Throttle harshness vs laptime')
 
-    def _harshness_chart(self, df) -> alt.Chart:
+    def _harshness_chart(self, df, drivers) -> alt.Chart:
+        if drivers:
+            return alt.Chart(df).mark_point(filled=True).encode(
+                y = alt.Y('mean(laptime):Q', axis=alt.Axis(title='Laptime [s]'), scale=alt.Scale(zero=False)),
+                x = alt.X('mean(harshness):Q', axis=alt.Axis(title='Harshness'), scale=alt.Scale(zero=False)),
+                color=alt.Color('driver:N', scale=alt.Scale(scheme='tableau10'), legend=alt.Legend(title='Driver')),
+                shape=alt.Shape('driver:N', legend=alt.Legend(title='Driver')),
+                tooltip=['driver', 'mean(laptime)', 'mean(harshness)']
+            )
         return alt.Chart(df).mark_point(filled=True).encode(
             y = alt.Y('laptime:Q', axis=alt.Axis(title='Laptime [s]'), scale=alt.Scale(zero=False)),
             x = alt.X('harshness:Q', axis=alt.Axis(title='Harshness'), scale=alt.Scale(zero=False)),
@@ -83,25 +91,29 @@ class Run:
             tooltip=['lap', 'laptime', 'driver']
         )
     
-    def braking_charts(self, turns_json: list[dict], chart_sections: int = 4, laps: list = []) -> tuple[alt.Chart]:
+    def braking_charts(self, turns_json: list[dict], chart_sections: int = 4, laps: list = [], drivers: bool = False) -> tuple[alt.Chart]:
         radars = []
-        axis_names, axis_idxs, lines, mean_v, out_v, distance_before_braking = get_braking_stats(turns_json, [lap.number for lap in self.laps], self.df, self.lap_map, lap_idxs=laps)
+        axis_names, axis_idxs, lines, drivers_names, mean_v, out_v, distance_before_braking = get_braking_stats(turns_json, [lap.number for lap in self.laps], self.df, self.lap_map, [lap.driver for lap in self.laps], lap_idxs=laps, groupby=drivers)
+        
         for metric, title in zip([mean_v, out_v], ['Mean velocity [m/s]', 'Velocity at the exit of the turn [m/s]']):
             df = pd.DataFrame({'axis_name': axis_names, 'axis': axis_idxs, 'line': lines, 'metric': metric})
             radars.append(RadarChart(df, chart_sections).chart.properties(title=title))
 
-        distance_before_braking_df = pd.DataFrame({'turn': axis_names, 'turn_id': axis_idxs, 'lap': lines, 'distance': distance_before_braking})
+        distance_before_braking_df = pd.DataFrame({'turn': axis_names, 'turn_id': axis_idxs, 'lap': lines, 'distance': distance_before_braking, 'driver': drivers_names})
+        color = alt.Color('lap:N', scale=alt.Scale(scheme='tableau10'), legend=None) if not drivers else alt.Color('driver:N', scale=alt.Scale(scheme='tableau10'), legend=None)
+        tooltip = ['lap', 'distance'] if not drivers else ['driver', 'distance']
         radars.append(
             alt.Chart(distance_before_braking_df).mark_point(filled=True).encode(
                 column=alt.Column('turn:N', sort=axis_idxs, title=None),
                 y=alt.Y('distance:Q', title=None, scale=alt.Scale(zero=False)),
-                color=alt.Color('lap:N', scale=alt.Scale(scheme='tableau10'), legend=alt.Legend(title='Lap number')),
-                tooltip=['turn', 'lap', 'distance']
+                color=color,
+                shape=alt.Shape('driver:N', legend=None),
+                tooltip=tooltip,
             ).resolve_scale(
                 y='independent'
             ).properties(
                 title='Distance before braking once in the turn [m]',
-                width=228//len(np.unique(axis_idxs)),
+                width=230//len(np.unique(axis_idxs)),
                 height=120,
             )
         )
