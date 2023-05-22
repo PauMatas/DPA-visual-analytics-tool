@@ -328,6 +328,7 @@ class CircuitChart(Circuit):
             ),
             order="index",
             detail=alt.Detail(["curve:N", "sector:N"]),
+            tooltip=['turn:N', 'sector:N'],
             strokeWidth=alt.value(10),
             strokeOpacity=alt.value(0.5), 
         ).properties(

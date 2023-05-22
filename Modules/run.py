@@ -76,7 +76,7 @@ class Run:
 
     def _harshness_chart(self, df) -> alt.Chart:
         return alt.Chart(df).mark_point(filled=True).encode(
-            y = alt.Y('laptime:Q', axis=alt.Axis(title='Laptime [s]')),
+            y = alt.Y('laptime:Q', axis=alt.Axis(title='Laptime [s]'), scale=alt.Scale(zero=False)),
             x = alt.X('harshness:Q', axis=alt.Axis(title='Harshness'), scale=alt.Scale(zero=False)),
             color = alt.Color('lap:N', scale=alt.Scale(scheme='tableau10'), legend=alt.Legend(title='Lap number')),
             shape=alt.Shape('driver:N', legend=alt.Legend(title='Driver')),
@@ -94,7 +94,7 @@ class Run:
         radars.append(
             alt.Chart(distance_before_braking_df).mark_point(filled=True).encode(
                 column=alt.Column('turn:N', sort=axis_idxs, title=None),
-                y=alt.Y('distance:Q', title=None),
+                y=alt.Y('distance:Q', title=None, scale=alt.Scale(zero=False)),
                 color=alt.Color('lap:N', scale=alt.Scale(scheme='tableau10'), legend=alt.Legend(title='Lap number')),
                 tooltip=['turn', 'lap', 'distance']
             ).resolve_scale(
@@ -102,7 +102,7 @@ class Run:
             ).properties(
                 title='Distance before braking once in the turn [m]',
                 width=228//len(np.unique(axis_idxs)),
-                height=200,
+                height=120,
             )
         )
         

@@ -103,6 +103,18 @@ with run_panel:
 
         st.altair_chart(braking_point_chart)
 
+        with st.expander('Circuit Turns', expanded=False):
+            if turns_json is None:
+                st.write('No turns data available, please build the turns data for this run first.')
+            else:
+                st.write('The following chart shows the circuit turns. These turns have been manually defined with microsectors, hovering the mouse over the chart you can see the turn number and the microsector number.')
+                circuit = CircuitChart(seed=int(run_selector.split(':')[1]), random_orientation=False)
+                st.altair_chart(
+                    circuit.turns_chart(turns_json=turns_json)
+                )
+                st.markdown('In order to change each turn microsectors modify the `turns.json` file in the run folder.')
+
+
     with harshness_panel:
         if lapA_selector == '<select>':
             throttle_harshness_chart = RUN_OBJECTS_DICT[run_selector].throttle_harshness_chart()
@@ -125,7 +137,7 @@ with lap_panel:
     st.divider()
     st.header('Lap overview')
     circuit = CircuitChart(seed=int(run_selector.split(':')[1]), random_orientation=False)
-    sectors, microsectors, turns = st.tabs(['Sectors', 'Microsectors', 'Turns'])
+    sectors, microsectors = st.tabs(['Sectors', 'Microsectors'])
     
     with sectors:
         sector = st.radio(
@@ -302,14 +314,6 @@ with lap_panel:
                     if lapB_selector != '<select>':
                         gg_diagram += RUN_OBJECTS_DICT[run_selector].laps[int(lapB_selector)].gg_diagram(sector=microsector)
                     st.altair_chart(gg_diagram, use_container_width=True)
-
-    with turns:
-        if turns_json is None:
-            st.write('No turns data available, please build the turns data for this run first.')
-        else:
-            st.altair_chart(
-                circuit.turns_chart(turns_json=turns_json)
-            )
 
 
 # st.dataframe(RUN_OBJECTS_DICT[run_selector].df)
