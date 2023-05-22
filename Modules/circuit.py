@@ -121,26 +121,24 @@ class CircuitChart(Circuit):
                         alt.value("black")
                     )
 
-        chart = (
-            alt.Chart(lines_df).mark_line().encode(
-                x=alt.X("x:Q", axis=None),
-                y=alt.Y("y:Q", axis=None),
-                color=color,
-                order="index:O",
-                strokeWidth=alt.condition(
-                    ((alt.datum.curve == "interior") | (alt.datum.curve == "exterior")),
-                    alt.value(0.5),
-                    alt.value(1.5)),
-                strokeOpacity=alt.condition(
-                    ((alt.datum.curve == "interior") | (alt.datum.curve == "exterior")),
-                    alt.value(0.5),
-                    alt.value(1)),
-                detail=alt.Detail(["curve:N", "sector_idx:N"]),
-            ).properties(
-                title=chart_title,
-            )
+        return alt.Chart(lines_df).mark_line().encode(
+            x=alt.X("x:Q", axis=None),
+            y=alt.Y("y:Q", axis=None),
+            color=color,
+            order="index:O",
+            strokeWidth=alt.condition(
+                ((alt.datum.curve == "interior") | (alt.datum.curve == "exterior")),
+                alt.value(0.5),
+                alt.value(1.5)),
+            strokeOpacity=alt.condition(
+                ((alt.datum.curve == "interior") | (alt.datum.curve == "exterior")),
+                alt.value(0.5),
+                alt.value(1)),
+            detail=alt.Detail(["curve:N", "sector_idx:N"]),
+            tooltip=alt.value(None),
+        ).properties(
+            title=chart_title,
         )
-        return chart
     
     def track_chart(self, microsectors: bool = False) -> alt.Chart:
         """Charts the circuit layout with the sectors and microsectors
@@ -198,6 +196,7 @@ class CircuitChart(Circuit):
             y=alt.Y("y", axis=None),
             detail="sector:N",
             color=alt.value("black"),
+            tooltip=alt.value(None),
         ).properties(
             title="Circuit Layout",
         )

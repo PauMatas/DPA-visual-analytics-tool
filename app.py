@@ -69,8 +69,13 @@ with st.sidebar:
         index=0,
         disabled = True if lapA_selector == '<select>' else False
     )
+
+    if lapB_selector != '<select>' and lapA_selector > lapB_selector:
+        lapA_selector, lapB_selector = lapB_selector, lapA_selector
     
-    if lapA_selector != '<select>':
+    if lapB_selector != '<select>':
+        laps_data_frame = laps_df(RUN_OBJECTS_DICT[run_selector].laps, RUN_OBJECTS_DICT[run_selector].info, lapA_selector, lapB_selector)
+    elif lapA_selector != '<select>':
         laps_data_frame = laps_df(RUN_OBJECTS_DICT[run_selector].laps, RUN_OBJECTS_DICT[run_selector].info, lapA_selector)
     else:
         laps_data_frame = laps_df(RUN_OBJECTS_DICT[run_selector].laps, RUN_OBJECTS_DICT[run_selector].info)
@@ -180,184 +185,191 @@ with lap_panel:
     sectors, microsectors = st.tabs(['Sectors', 'Microsectors'])
     
     with sectors:
-        sector = st.radio(
-            'Select sector',
-            options = ['All sectors'] + RUN_OBJECTS_DICT[run_selector].df['sector'].unique().tolist(),
-            index = 0,
-            format_func = lambda x: f"Sector {x}" if x != 'All sectors' else x,
-            horizontal = True
-        )
-
-        if sector == 'All sectors':
-            track, delta_comparison = st.columns(2)
-            with delta_comparison:
-                if lapB_selector != '<select>':
-                    st.altair_chart(
-                        RUN_OBJECTS_DICT[run_selector].laps_delta_comparison_chart(
-                            circuit, lapA_selector, lapB_selector),
-                        use_container_width=True
-                    )
-            
-            with track:
-                if lapA_selector == '<select>':
-                    st.altair_chart(
-                        circuit.track_chart(),
-                    )
-                elif lapB_selector == '<select>':
-                    racing_line_df = RUN_OBJECTS_DICT[run_selector].laps[lapA_selector].racing_line_df(curve_name='lapA', sector=(1,30))
-                    sectors_delta = compute_sectors_deltas(
-                        info=RUN_OBJECTS_DICT[run_selector].info,
-                        filename=RUN_OBJECTS_DICT[run_selector].laps[lapA_selector].filename,
-                        lap=lapA_selector - RUN_OBJECTS_DICT[run_selector].lap_map[lapA_selector]
-                    )
-                    st.altair_chart(
-                        circuit.chart(middle_curve_df=racing_line_df, info=sectors_delta),
-                        use_container_width=True
-                    )
-                else:
-                    sectors_comparison = compute_sectors_comparison(
-                        info=RUN_OBJECTS_DICT[run_selector].info,
-                        filenameA=RUN_OBJECTS_DICT[run_selector].laps[lapA_selector].filename,
-                        global_lapA=lapA_selector,
-                        lapA=lapA_selector - RUN_OBJECTS_DICT[run_selector].lap_map[lapA_selector],
-                        filenameB=RUN_OBJECTS_DICT[run_selector].laps[lapB_selector].filename,
-                        global_lapB=lapB_selector,
-                        lapB=lapB_selector - RUN_OBJECTS_DICT[run_selector].lap_map[lapB_selector]
-                        )
-                    st.altair_chart(
-                        circuit.colored_sectors_chart(sectors_comparison),
-                        use_container_width=True
-                    )
-
+        if lapA_selector == '<select>':
+            st.altair_chart(
+                circuit.track_chart(),
+            )
         else:
-            sector_idx = sector - 1
-            
-            if lapB_selector != '<select>':
-                sector_racing_line, sector_gg_diagram, delta_comparison = st.columns([3,2,2])
-                with delta_comparison:
-                    st.altair_chart(
-                        RUN_OBJECTS_DICT[run_selector].laps_delta_comparison_chart(
-                            circuit, lapA_selector, lapB_selector, sector=sector),
-                        use_container_width=True
-                    )
-            else:
-                sector_racing_line, sector_gg_diagram = st.columns(2)
+            sector = st.radio(
+                'Select sector',
+                options = ['All sectors'] + RUN_OBJECTS_DICT[run_selector].df['sector'].unique().tolist(),
+                index = 0,
+                format_func = lambda x: f"Sector {x}" if x != 'All sectors' else x,
+                horizontal = True
+            )
 
-            with sector_racing_line:
-                if lapA_selector == '<select>':
-                    st.altair_chart(
-                        circuit.chart(sector=sector_idx),
-                    )
-                elif lapB_selector == '<select>':
-                    racing_line_df = RUN_OBJECTS_DICT[run_selector].laps[lapA_selector].racing_line_df(curve_name='lapA', sector=sector)
-                    sectors_delta = compute_sectors_deltas(
-                        info=RUN_OBJECTS_DICT[run_selector].info,
-                        filename=RUN_OBJECTS_DICT[run_selector].laps[lapA_selector].filename,
-                        lap=lapA_selector - RUN_OBJECTS_DICT[run_selector].lap_map[lapA_selector]
-                    )
-                    st.altair_chart(
-                        circuit.chart(middle_curve_df=racing_line_df, sector=sector_idx, info=[sectors_delta[sector_idx]]),
-                    )
-                else:
-                    racing_line_df = RUN_OBJECTS_DICT[run_selector].laps[lapA_selector].racing_line_df(curve_name='lapA', sector=sector)
-                    racing_line_df = pd.concat([racing_line_df, RUN_OBJECTS_DICT[run_selector].laps[lapB_selector].racing_line_df(curve_name='lapB', sector=sector)])
-                    st.altair_chart(
-                        circuit.chart(middle_curve_df=racing_line_df, sector=sector_idx),
-                    )
-            
-            with sector_gg_diagram:
-                if lapA_selector != '<select>':
-                    gg_diagram = RUN_OBJECTS_DICT[run_selector].laps[lapA_selector].gg_diagram(sector=sector)
+            if sector == 'All sectors':
+                track, delta_comparison = st.columns(2)
+                with delta_comparison:
                     if lapB_selector != '<select>':
-                        gg_diagram += RUN_OBJECTS_DICT[run_selector].laps[lapB_selector].gg_diagram(sector=sector)
-                    st.altair_chart(gg_diagram, use_container_width=True)
+                        st.altair_chart(
+                            RUN_OBJECTS_DICT[run_selector].laps_delta_comparison_chart(
+                                circuit, lapA_selector, lapB_selector),
+                            use_container_width=True
+                        )
+                
+                with track:
+                    if lapB_selector == '<select>':
+                        racing_line_df = RUN_OBJECTS_DICT[run_selector].laps[lapA_selector].racing_line_df(curve_name='lapA', sector=(1,30))
+                        sectors_delta = compute_sectors_deltas(
+                            info=RUN_OBJECTS_DICT[run_selector].info,
+                            filename=RUN_OBJECTS_DICT[run_selector].laps[lapA_selector].filename,
+                            lap=lapA_selector - RUN_OBJECTS_DICT[run_selector].lap_map[lapA_selector]
+                        )
+                        st.altair_chart(
+                            circuit.chart(middle_curve_df=racing_line_df, info=sectors_delta),
+                            use_container_width=True
+                        )
+                    else:
+                        sectors_comparison = compute_sectors_comparison(
+                            info=RUN_OBJECTS_DICT[run_selector].info,
+                            filenameA=RUN_OBJECTS_DICT[run_selector].laps[lapA_selector].filename,
+                            global_lapA=lapA_selector,
+                            lapA=lapA_selector - RUN_OBJECTS_DICT[run_selector].lap_map[lapA_selector],
+                            filenameB=RUN_OBJECTS_DICT[run_selector].laps[lapB_selector].filename,
+                            global_lapB=lapB_selector,
+                            lapB=lapB_selector - RUN_OBJECTS_DICT[run_selector].lap_map[lapB_selector]
+                            )
+                        st.altair_chart(
+                            circuit.colored_sectors_chart(sectors_comparison),
+                            use_container_width=True
+                        )
+
+            else:
+                sector_idx = sector - 1
+                
+                if lapB_selector != '<select>':
+                    sector_racing_line, sector_gg_diagram, delta_comparison = st.columns(3)
+                    with delta_comparison:
+                        st.altair_chart(
+                            RUN_OBJECTS_DICT[run_selector].laps_delta_comparison_chart(
+                                circuit, lapA_selector, lapB_selector, sector=sector),
+                            use_container_width=True
+                        )
+                else:
+                    sector_racing_line, sector_gg_diagram = st.columns(2)
+
+                with sector_racing_line:
+                    if lapA_selector == '<select>':
+                        st.altair_chart(
+                            circuit.chart(sector=sector_idx),
+                            use_container_width=True
+                        )
+                    elif lapB_selector == '<select>':
+                        racing_line_df = RUN_OBJECTS_DICT[run_selector].laps[lapA_selector].racing_line_df(curve_name='lapA', sector=sector)
+                        sectors_delta = compute_sectors_deltas(
+                            info=RUN_OBJECTS_DICT[run_selector].info,
+                            filename=RUN_OBJECTS_DICT[run_selector].laps[lapA_selector].filename,
+                            lap=lapA_selector - RUN_OBJECTS_DICT[run_selector].lap_map[lapA_selector]
+                        )
+                        st.altair_chart(
+                            circuit.chart(middle_curve_df=racing_line_df, sector=sector_idx, info=[sectors_delta[sector_idx]]),
+                            use_container_width=True
+                        )
+                    else:
+                        racing_line_df = RUN_OBJECTS_DICT[run_selector].laps[lapA_selector].racing_line_df(curve_name='lapA', sector=sector)
+                        racing_line_df = pd.concat([racing_line_df, RUN_OBJECTS_DICT[run_selector].laps[lapB_selector].racing_line_df(curve_name='lapB', sector=sector)])
+                        st.altair_chart(
+                            circuit.chart(middle_curve_df=racing_line_df, sector=sector_idx),
+                            use_container_width=True
+                        )
+                
+                with sector_gg_diagram:
+                    if lapA_selector != '<select>':
+                        gg_diagram = RUN_OBJECTS_DICT[run_selector].laps[lapA_selector].gg_diagram(sector=sector)
+                        if lapB_selector != '<select>':
+                            gg_diagram += RUN_OBJECTS_DICT[run_selector].laps[lapB_selector].gg_diagram(sector=sector)
+                        st.altair_chart(gg_diagram, use_container_width=True)
 
     with microsectors:
-        microsector = st.select_slider(
-            'Select microsector',
-            options=RUN_OBJECTS_DICT[run_selector].df['microsector'].unique().tolist(),
-            value=(1, 30),
-            format_func = lambda x: f"Microsector {x}",
-        )
-        if microsector == (1, 30):
-            microsector = 'All microsectors'
-
-        if microsector == 'All microsectors':
-            track, delta_comparison = st.columns(2)
-            with delta_comparison:
-                if lapB_selector != '<select>':
-                    st.altair_chart(
-                        RUN_OBJECTS_DICT[run_selector].laps_delta_comparison_chart(
-                            circuit, lapA_selector, lapB_selector, sector=tuple()),
-                        use_container_width=True
-                    )
-            
-            with track:
-                if lapA_selector == '<select>':
-                    st.altair_chart(
-                        circuit.track_chart(microsectors=True),
-                    )
-                elif lapB_selector == '<select>':
-                    racing_line_df = RUN_OBJECTS_DICT[run_selector].laps[lapA_selector].racing_line_df(curve_name='lapA', sector=(1,30))
-                    microsectors_delta = compute_sectors_deltas(
-                        info=RUN_OBJECTS_DICT[run_selector].info,
-                        filename=RUN_OBJECTS_DICT[run_selector].laps[lapA_selector].filename,
-                        lap=lapA_selector - RUN_OBJECTS_DICT[run_selector].lap_map[lapA_selector],
-                        microsectors=True
-                        )
-                    st.altair_chart(
-                        circuit.chart(middle_curve_df=racing_line_df, info=microsectors_delta),
-                        use_container_width=True
-                    )
-                else:
-                    microsectors_comparison = compute_sectors_comparison(
-                        info=RUN_OBJECTS_DICT[run_selector].info,
-                        filenameA=RUN_OBJECTS_DICT[run_selector].laps[lapA_selector].filename,
-                        global_lapA=lapA_selector,
-                        lapA=lapA_selector - RUN_OBJECTS_DICT[run_selector].lap_map[lapA_selector],
-                        filenameB=RUN_OBJECTS_DICT[run_selector].laps[lapB_selector].filename,
-                        global_lapB=lapB_selector,
-                        lapB=lapB_selector - RUN_OBJECTS_DICT[run_selector].lap_map[lapB_selector],
-                        microsectors=True
-                        )
-                    st.altair_chart(
-                        circuit.colored_sectors_chart(microsectors_comparison, microsectors=True),
-                        use_container_width=True
-                    )
-
+        if lapA_selector == '<select>':
+            st.altair_chart(
+                circuit.track_chart(microsectors=True),
+            )
         else:
-            microsector_idx = (microsector[0] - 1, microsector[1] - 1)
-            
-            if lapB_selector != '<select>':
-                microsector_racing_line, microsector_gg_diagram, delta_comparison = st.columns([3,2,2])
-                with delta_comparison:
-                    st.altair_chart(
-                        RUN_OBJECTS_DICT[run_selector].laps_delta_comparison_chart(
-                            circuit, lapA_selector, lapB_selector, sector=microsector),
-                        use_container_width=True
-                    )
-            else:
-                microsector_racing_line, microsector_gg_diagram = st.columns(2)
+            microsector = st.select_slider(
+                'Select microsector',
+                options=RUN_OBJECTS_DICT[run_selector].df['microsector'].unique().tolist(),
+                value=(1, 30),
+                format_func = lambda x: f"Microsector {x}",
+            )
+            if microsector == (1, 30):
+                microsector = 'All microsectors'
 
-            with microsector_racing_line:
-                if lapA_selector == '<select>':
-                    st.altair_chart(
-                        circuit.chart(sector=microsector_idx),
-                    )
+            if microsector == 'All microsectors':
+                track, delta_comparison = st.columns(2)
+                with delta_comparison:
+                    if lapB_selector != '<select>':
+                        st.altair_chart(
+                            RUN_OBJECTS_DICT[run_selector].laps_delta_comparison_chart(
+                                circuit, lapA_selector, lapB_selector, sector=tuple()),
+                            use_container_width=True
+                        )
+                
+                with track:
+                    if lapB_selector == '<select>':
+                        racing_line_df = RUN_OBJECTS_DICT[run_selector].laps[lapA_selector].racing_line_df(curve_name='lapA', sector=(1,30))
+                        microsectors_delta = compute_sectors_deltas(
+                            info=RUN_OBJECTS_DICT[run_selector].info,
+                            filename=RUN_OBJECTS_DICT[run_selector].laps[lapA_selector].filename,
+                            lap=lapA_selector - RUN_OBJECTS_DICT[run_selector].lap_map[lapA_selector],
+                            microsectors=True
+                            )
+                        st.altair_chart(
+                            circuit.chart(middle_curve_df=racing_line_df, info=microsectors_delta),
+                            use_container_width=True
+                        )
+                    else:
+                        microsectors_comparison = compute_sectors_comparison(
+                            info=RUN_OBJECTS_DICT[run_selector].info,
+                            filenameA=RUN_OBJECTS_DICT[run_selector].laps[lapA_selector].filename,
+                            global_lapA=lapA_selector,
+                            lapA=lapA_selector - RUN_OBJECTS_DICT[run_selector].lap_map[lapA_selector],
+                            filenameB=RUN_OBJECTS_DICT[run_selector].laps[lapB_selector].filename,
+                            global_lapB=lapB_selector,
+                            lapB=lapB_selector - RUN_OBJECTS_DICT[run_selector].lap_map[lapB_selector],
+                            microsectors=True
+                            )
+                        st.altair_chart(
+                            circuit.colored_sectors_chart(microsectors_comparison, microsectors=True),
+                            use_container_width=True
+                        )
+
+            else:
+                microsector_idx = (microsector[0] - 1, microsector[1] - 1)
+                
+                if lapB_selector != '<select>':
+                    microsector_racing_line, microsector_gg_diagram, delta_comparison = st.columns(3)
+                    with delta_comparison:
+                        st.altair_chart(
+                            RUN_OBJECTS_DICT[run_selector].laps_delta_comparison_chart(
+                                circuit, lapA_selector, lapB_selector, sector=microsector),
+                            use_container_width=True
+                        )
                 else:
-                    racing_line_df = RUN_OBJECTS_DICT[run_selector].laps[lapA_selector].racing_line_df(curve_name='lapA', sector=microsector)
-                    if lapB_selector != '<select>':
-                        racing_line_df = pd.concat([racing_line_df, RUN_OBJECTS_DICT[run_selector].laps[lapB_selector].racing_line_df(curve_name='lapB', sector=microsector)])
-                    st.altair_chart(
-                        circuit.chart(middle_curve_df=racing_line_df, sector=microsector_idx),
-                    )
-            
-            with microsector_gg_diagram:
-                if lapA_selector != '<select>':
-                    gg_diagram = RUN_OBJECTS_DICT[run_selector].laps[lapA_selector].gg_diagram(sector=microsector)
-                    if lapB_selector != '<select>':
-                        gg_diagram += RUN_OBJECTS_DICT[run_selector].laps[lapB_selector].gg_diagram(sector=microsector)
-                    st.altair_chart(gg_diagram, use_container_width=True)
+                    microsector_racing_line, microsector_gg_diagram = st.columns(2)
+
+                with microsector_racing_line:
+                    if lapA_selector == '<select>':
+                        st.altair_chart(
+                            circuit.chart(sector=microsector_idx),
+                            use_container_width=True
+                        )
+                    else:
+                        racing_line_df = RUN_OBJECTS_DICT[run_selector].laps[lapA_selector].racing_line_df(curve_name='lapA', sector=microsector)
+                        if lapB_selector != '<select>':
+                            racing_line_df = pd.concat([racing_line_df, RUN_OBJECTS_DICT[run_selector].laps[lapB_selector].racing_line_df(curve_name='lapB', sector=microsector)])
+                        st.altair_chart(
+                            circuit.chart(middle_curve_df=racing_line_df, sector=microsector_idx),
+                            use_container_width=True
+                        )
+                
+                with microsector_gg_diagram:
+                    if lapA_selector != '<select>':
+                        gg_diagram = RUN_OBJECTS_DICT[run_selector].laps[lapA_selector].gg_diagram(sector=microsector)
+                        if lapB_selector != '<select>':
+                            gg_diagram += RUN_OBJECTS_DICT[run_selector].laps[lapB_selector].gg_diagram(sector=microsector)
+                        st.altair_chart(gg_diagram, use_container_width=True)
 
 
 # st.dataframe(RUN_OBJECTS_DICT[run_selector].df)

@@ -37,12 +37,14 @@ def compute_sectors_comparison(info: dict, filenameA: str, global_lapA: int, lap
         for tA, tB in zip(lapA_times, lapB_times)
     ]
 
-def color_laps_df_rows(row: pd.Series, info: dict, selected_lap: int = None) -> list:
+def color_laps_df_rows(row: pd.Series, info: dict, lapA: int = None, lapB: int = None) -> list:
     """
     Returns a colormap for the rows of the laps dataframe.
     """
-    if selected_lap is not None and int(row['Lap'].split(' ')[1]) == selected_lap:
+    if lapA is not None and int(row['Lap'].split(' ')[1]) == lapA:
         row_colors = ['background-color: rgba(78, 121, 167, 0.5);'] * 2
+    elif lapB is not None and int(row['Lap'].split(' ')[1]) == lapB:
+        row_colors = ['background-color: rgba(242, 142, 43, 0.5);'] * 2
     else:
         row_colors = ['background-color: white;'] * 2
 
@@ -55,10 +57,11 @@ def color_laps_df_rows(row: pd.Series, info: dict, selected_lap: int = None) -> 
     
     return row_colors
 
-def laps_df(laps: list, info: dict, selected_lap: int = None) -> pd.DataFrame:
+def laps_df(laps: list, info: dict, lapA: int = None, lapB: int = None) -> pd.DataFrame:
     """
     Create a colored dataframe with the laps information.
     """
+    assert lapB is None or lapA is not None, 'lapA must be specified if lapB is specified'
     laps_df = pd.DataFrame(
         [
             {
@@ -71,6 +74,6 @@ def laps_df(laps: list, info: dict, selected_lap: int = None) -> pd.DataFrame:
     )
 
     return laps_df.style.apply(
-        lambda row: color_laps_df_rows(row, info, selected_lap),
+        lambda row: color_laps_df_rows(row, info, lapA, lapB),
         axis=1
     )
