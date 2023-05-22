@@ -124,7 +124,7 @@ class Run:
         microsectors = False
         if isinstance(sector, tuple):
             microsectors = True
-            sector = list(range(sector[0], sector[-1] + 1))
+            sector = None if not sector else list(range(sector[0], sector[-1] + 1))
 
         if sector is None:
             positionsA = self.laps[lapA].df[['xPosition', 'yPosition']]
@@ -166,7 +166,9 @@ class Run:
         })
         domain = np.max(np.abs(data['delta'].quantile([0.05, 0.95]).values.tolist()))
 
-        return alt.Chart(data).mark_area(fillOpacity=0.75).encode(
+        rulers_chart = self._laps_delta_comparison_rulers_chart(circuit, lapA, lapB, sector, microsectors)
+
+        return (alt.Chart(data).mark_area(fillOpacity=0.75).encode(
                 x=alt.X('dist:Q', axis=alt.Axis(title='Distance covered [m]')),
                 y=alt.Y('delta:Q', impute={'value': 0}, axis=alt.Axis(title='Time difference [s]'), scale=alt.Scale(domain=[-domain, domain])),
                 color=alt.Color(
@@ -175,6 +177,31 @@ class Run:
                     legend=alt.Legend(title='Fastest lap'),
                 ),
                 tooltip=['delta:Q']
-            ).properties(
+            ) + rulers_chart).properties(
                 title=f'Lap {lapA} time - Lap {lapB} time along track',
             )
+
+    def _laps_delta_comparison_rulers_chart(self, circuit: Circuit, lapA: int, lapB: int, sector: None|int|list, microsectors: bool) -> alt.Chart:
+        circuit_length = self.laps[lapA].df['dist1'].sum()
+        
+        if sector is None:
+            start = circuit.middle_curve.t[0]
+            end = circuit.middle_curve.t[-1]
+            intervals = circuit.N_MICROSECTORS if microsectors else circuit.N_SECTORS
+        elif microsectors:
+            start = circuit.middle_curve.t[-1] * (sector[0] - 1) / circuit.N_MICROSECTORS
+            end = circuit.middle_curve.t[-1] * sector[-1] / circuit.N_MICROSECTORS
+            intervals = len(sector)
+        else:
+            start = circuit.middle_curve.t[-1] * (sector - 1) / circuit.N_SECTORS
+            end = circuit.middle_curve.t[-1] * sector / circuit.N_SECTORS
+            intervals = 1
+
+        if 1 < intervals:
+            rulers = [((start + ((end - start) * (i+1)/intervals))/circuit.middle_curve.t[-1]) * circuit_length for i in range(intervals)]
+        else:
+            rulers = []
+
+        return alt.Chart(pd.DataFrame({'x': rulers})).mark_rule(strokeDash=[5, 5], strokeOpacity=0.5).encode(
+            x='x:Q',
+        )

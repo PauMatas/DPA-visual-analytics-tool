@@ -107,7 +107,7 @@ with run_panel:
 
             st.altair_chart(braking_point_chart)
 
-            with st.expander('Circuit Turns', expanded=False):
+            with st.expander('Circuit Turns explanation', expanded=False):
                 if turns_json is None:
                     st.write('No turns data available, please build the turns data for this run first.')
                 else:
@@ -286,7 +286,7 @@ with lap_panel:
                 if lapB_selector != '<select>':
                     st.altair_chart(
                         RUN_OBJECTS_DICT[run_selector].laps_delta_comparison_chart(
-                            circuit, lapA_selector, lapB_selector),
+                            circuit, lapA_selector, lapB_selector, sector=tuple()),
                         use_container_width=True
                     )
             
