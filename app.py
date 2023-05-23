@@ -96,32 +96,35 @@ with run_panel:
 
     with laps_tab:
         radars_panel, harshness_panel = st.columns([2,1])
-        with radars_panel:
-            if lapA_selector == '<select>':
-                mean_v_chart, out_v_chart, braking_point_chart = RUN_OBJECTS_DICT[run_selector].braking_charts(turns_json)
-            else:
-                lap_numbers = [lapA_selector, lapB_selector] if lapB_selector != '<select>' else [lapA_selector]
-                mean_v_chart, out_v_chart, braking_point_chart = RUN_OBJECTS_DICT[run_selector].braking_charts(turns_json, laps=lap_numbers)
-            
-            columns = st.columns(2)
-            with columns[0]:
-                st.altair_chart(mean_v_chart)
-            
-            with columns[1]:
-                st.altair_chart(out_v_chart)
-
-            st.altair_chart(braking_point_chart)
-
-            with st.expander('Circuit Turns explanation', expanded=False):
-                if turns_json is None:
-                    st.write('No turns data available, please build the turns data for this run first.')
+        if turns_json is None:
+            st.error('No turns data available, please build the turns data for this run first.')
+        else:
+            with radars_panel:
+                if lapA_selector == '<select>':
+                    mean_v_chart, out_v_chart, braking_point_chart = RUN_OBJECTS_DICT[run_selector].braking_charts(turns_json)
                 else:
-                    st.write('The following chart shows the circuit turns. These turns have been manually defined with microsectors, hovering the mouse over the chart you can see the turn number and the microsector number.')
-                    circuit = CircuitChart(seed=int(run_selector.split(':')[1]), random_orientation=False)
-                    st.altair_chart(
-                        circuit.turns_chart(turns_json=turns_json)
-                    )
-                    st.markdown('In order to change each turn microsectors modify the `turns.json` file in the run folder.')
+                    lap_numbers = [lapA_selector, lapB_selector] if lapB_selector != '<select>' else [lapA_selector]
+                    mean_v_chart, out_v_chart, braking_point_chart = RUN_OBJECTS_DICT[run_selector].braking_charts(turns_json, laps=lap_numbers)
+                
+                columns = st.columns(2)
+                with columns[0]:
+                    st.altair_chart(mean_v_chart)
+                
+                with columns[1]:
+                    st.altair_chart(out_v_chart)
+
+                st.altair_chart(braking_point_chart)
+
+                with st.expander('Circuit Turns explanation', expanded=False):
+                    if turns_json is None:
+                        st.write('No turns data available, please build the turns data for this run first.')
+                    else:
+                        st.write('The following chart shows the circuit turns. These turns have been manually defined with microsectors, hovering the mouse over the chart you can see the turn number and the microsector number.')
+                        circuit = CircuitChart(seed=int(run_selector.split(':')[1]), random_orientation=False)
+                        st.altair_chart(
+                            circuit.turns_chart(turns_json=turns_json)
+                        )
+                        st.markdown('In order to change each turn microsectors modify the `turns.json` file in the run folder.')
 
 
         with harshness_panel:
@@ -141,28 +144,31 @@ with run_panel:
             st.warning('Drivers\' Run overview is not available when laps are selected.')
         else:
             radars_panel, harshness_panel = st.columns([2,1])
-            with radars_panel:
-                mean_v_chart, out_v_chart, braking_point_chart = RUN_OBJECTS_DICT[run_selector].braking_charts(turns_json, drivers=True)
-                
-                columns = st.columns(2)
-                with columns[0]:
-                    st.altair_chart(mean_v_chart)
-                
-                with columns[1]:
-                    st.altair_chart(out_v_chart)
+            if turns_json is None:
+                st.error('No turns data available, please build the turns data for this run first.')
+            else:
+                with radars_panel:
+                    mean_v_chart, out_v_chart, braking_point_chart = RUN_OBJECTS_DICT[run_selector].braking_charts(turns_json, drivers=True)
+                    
+                    columns = st.columns(2)
+                    with columns[0]:
+                        st.altair_chart(mean_v_chart)
+                    
+                    with columns[1]:
+                        st.altair_chart(out_v_chart)
 
-                st.altair_chart(braking_point_chart)
+                    st.altair_chart(braking_point_chart)
 
-                with st.expander('Circuit Turns', expanded=False):
-                    if turns_json is None:
-                        st.write('No turns data available, please build the turns data for this run first.')
-                    else:
-                        st.write('The following chart shows the circuit turns. These turns have been manually defined with microsectors, hovering the mouse over the chart you can see the turn number and the microsector number.')
-                        circuit = CircuitChart(seed=int(run_selector.split(':')[1]), random_orientation=False)
-                        st.altair_chart(
-                            circuit.turns_chart(turns_json=turns_json)
-                        )
-                        st.markdown('In order to change each turn microsectors modify the `turns.json` file in the run folder.')
+                    with st.expander('Circuit Turns', expanded=False):
+                        if turns_json is None:
+                            st.write('No turns data available, please build the turns data for this run first.')
+                        else:
+                            st.write('The following chart shows the circuit turns. These turns have been manually defined with microsectors, hovering the mouse over the chart you can see the turn number and the microsector number.')
+                            circuit = CircuitChart(seed=int(run_selector.split(':')[1]), random_orientation=False)
+                            st.altair_chart(
+                                circuit.turns_chart(turns_json=turns_json)
+                            )
+                            st.markdown('In order to change each turn microsectors modify the `turns.json` file in the run folder.')
 
 
             with harshness_panel:

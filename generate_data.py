@@ -112,7 +112,7 @@ def __main__():
     parser.add_argument('-n', '--n_circuits', dest='n_circuits', default=1, help='Number of circuits to generate.', type=int)
     args = parser.parse_args()
 
-    SEEDS = [420, 1337, 27, 4, 54, 33][:args.n_circuits] # TODO: remove this line
+    SEEDS = [420, 1337, 27, 4, 54, 6811, 3412][:args.n_circuits] # TODO: remove this line
     # SEEDS = list(np.random.randint(0, 2**32, args.n_circuits))
 
     # Generate circuits

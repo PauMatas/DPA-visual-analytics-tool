@@ -1,0 +1,42 @@
+[
+    {
+        "name": "Turn 1",
+        "first_ms": 2,
+        "last_ms": 5
+    },
+    {
+        "name": "Turn 2",
+        "first_ms": 6,
+        "last_ms": 7
+    },
+    {
+        "name": "Turn 3",
+        "first_ms": 8,
+        "last_ms": 10
+    },
+    {
+        "name": "Turn 4",
+        "first_ms": 13,
+        "last_ms": 15
+    },
+    {
+        "name": "Turn 5",
+        "first_ms": 16,
+        "last_ms": 17
+    },
+    {
+        "name": "Turn 6",
+        "first_ms": 19,
+        "last_ms": 21
+    },
+    {
+        "name": "Turn 7",
+        "first_ms": 24,
+        "last_ms": 25
+    },
+    {
+        "name": "Turn 8",
+        "first_ms": 26,
+        "last_ms": 27
+    }
+]

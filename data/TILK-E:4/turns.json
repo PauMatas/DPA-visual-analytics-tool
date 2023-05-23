@@ -1,0 +1,32 @@
+[
+    {
+        "name": "Turn 1",
+        "first_ms": 6,
+        "last_ms": 8
+    },
+    {
+        "name": "Turn 2",
+        "first_ms": 16,
+        "last_ms": 18
+    },
+    {
+        "name": "Turn 3",
+        "first_ms": 19,
+        "last_ms": 21
+    },
+    {
+        "name": "Turn 4",
+        "first_ms": 24,
+        "last_ms": 26
+    },
+    {
+        "name": "Turn 5",
+        "first_ms": 27,
+        "last_ms": 28
+    },
+    {
+        "name": "Turn 6",
+        "first_ms": 29,
+        "last_ms": 30
+    }
+]
