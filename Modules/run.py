@@ -46,6 +46,7 @@ class Run:
         sum.laps = other.laps
         for lap in sum.laps:
             lap.number += len(self.laps)
+            lap.df['laps'] = lap.number
         sum.laps = self.laps + sum.laps
         sum.lap_map = self.lap_map + [lap_map + len(self.laps) for lap_map in other.lap_map]
 
@@ -173,14 +174,19 @@ class Run:
         return (alt.Chart(data).mark_area(fillOpacity=0.75).encode(
                 x=alt.X('dist:Q', axis=alt.Axis(title='Distance covered [m]')),
                 y=alt.Y('delta:Q', impute={'value': 0}, axis=alt.Axis(title='Time difference [s]'), scale=alt.Scale(domain=[-domain, domain])),
-                color=alt.Color(
-                    'color:N',
-                    scale=alt.Scale(scheme='tableau10'),
-                    legend=alt.Legend(title='Lap number'),
+                color=alt.condition(
+                    alt.datum.color != -1,
+                    alt.Color(
+                        'color:N',
+                        scale=alt.Scale(
+                            range=['#4E79A7', '#F28E2B'],
+                            domain=[lapA, lapB]),
+                        legend=alt.Legend(title='Lap number', orient='top')),
+                    alt.ColorValue('grey'),
                 ),
                 tooltip=['delta:Q']
             ) + rulers_chart).properties(
-                title=f'Lap {lapA} time - Lap {lapB} time along track',
+                title=f'Time difference along track (lap {lapA} - lap {lapB})',
             )
 
     def _laps_delta_comparison_rulers_chart(self, circuit: Circuit, lapA: int, lapB: int, sector: None|int|list, microsectors: bool) -> alt.Chart:
@@ -199,7 +205,7 @@ class Run:
             end = circuit.middle_curve.t[-1] * sector / circuit.N_SECTORS
             intervals = 1
 
-        if 1 < intervals:
+        if 1 < intervals <= 10:
             rulers = [((start + ((end - start) * (i+1)/intervals))/circuit.middle_curve.t[-1]) * circuit_length for i in range(intervals)]
         else:
             rulers = []

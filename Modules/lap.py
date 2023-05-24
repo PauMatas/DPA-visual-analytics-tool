@@ -90,11 +90,12 @@ class Lap:
         return chart.mark_point(filled=True).encode(
             x=alt.X('VN_ax:Q', axis=alt.Axis(title='Tansversal Acceleration [m/s²]'), scale=alt.Scale(domain=[-domain, domain])),
             y=alt.Y('VN_ay:Q', axis=alt.Axis(title='Longitudinal Acceleration [m/s²]'), scale=alt.Scale(domain=[-domain, domain])),
-            color=alt.Color('laps:N', scale=alt.Scale(scheme='tableau10'), legend=alt.Legend(title='Lap number')),
+            color=alt.Color('laps:N', scale=alt.Scale(scheme='tableau10'), legend=alt.Legend(title='Lap number', orient='top')),
             tooltip=[alt.Tooltip(field='VN_ax', type='quantitative', title='Tansversal Acc.'), alt.Tooltip(field='VN_ay', type='quantitative', title='Longitudinal Acc.')]
         ).properties(
             height=350,
-            title=f"GG Diagram - Circuit: {self.filename.split('_')[0]}{sector_title if sector is not None else ''}"
+            title="GG Diagram"
+            # title=f"GG Diagram - Circuit: {self.filename.split('_')[0]} {sector_title if sector is not None else ''}"
         )
     
     def racing_line_df(self, curve_name: str = 'middle', sector: int | tuple = None) -> pd.DataFrame:
