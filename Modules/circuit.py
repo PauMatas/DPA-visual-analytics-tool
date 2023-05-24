@@ -116,8 +116,8 @@ class CircuitChart(Circuit):
             color = alt.condition(
                         ((alt.datum.curve != "interior") & (alt.datum.curve != "exterior")),
                         alt.Color("sector:N",
-                            scale=alt.Scale(range=["purple", "green", "#e1d614"], domain=["best", "personal_best", "other"]),
-                            legend=alt.Legend(title="Time Info")),
+                            scale=alt.Scale(range=["purple", "green", "#e1d614"], domain=['Best overall', 'Personal best', 'Other times']),
+                            legend=alt.Legend(title="Time Info", orient="left")),
                         alt.value("black")
                     )
 
@@ -249,16 +249,18 @@ class CircuitChart(Circuit):
             curve_df["curve"] = track_name
             df = pd.concat([df, curve_df])
 
-        if 'best' in df["delta"].unique().tolist() or 'personal_best' in df["delta"].unique().tolist() or 'other' in df["delta"].unique().tolist():
+        if 'Best overall' in df["delta"].unique().tolist() or 'Personal best' in df["delta"].unique().tolist() or 'Other times' in df["delta"].unique().tolist():
             color=alt.Color(
                 "delta:N",
-                scale=alt.Scale(range=["purple", "green", "#e1d614"], domain=["best", "personal_best", "other"]),
+                scale=alt.Scale(range=["purple", "green", "#e1d614"], domain=['Best overall', 'Personal best', 'Other times']),
+                legend=alt.Legend(title="Time Info", orient="left"),
+
             )
             tooltip_labels = {'sector': 'Microsector' if microsectors else 'Sector'}
         else:
             color = alt.condition(
                 alt.datum.delta != -1,
-                alt.Color("delta:N", scale=alt.Scale(scheme="tableau10"), legend=alt.Legend(title=f"Lap number")),
+                alt.Color("delta:N", scale=alt.Scale(scheme="tableau10"), legend=alt.Legend(title=f"Lap number", orient="left")),
                 alt.value("grey"),
             )
             tooltip_labels = {'delta': 'LapA time-LapB time', 'sector': 'Microsector' if microsectors else 'Sector'}
