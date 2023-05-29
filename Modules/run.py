@@ -82,14 +82,14 @@ class Run:
                 x = alt.X('mean(harshness):Q', axis=alt.Axis(title='Harshness'), scale=alt.Scale(zero=False)),
                 color=alt.Color('driver:N', scale=alt.Scale(scheme='tableau10'), legend=alt.Legend(title='Driver')),
                 shape=alt.Shape('driver:N', legend=alt.Legend(title='Driver')),
-                tooltip=['driver', 'mean(laptime)', 'mean(harshness)']
+                tooltip=['driver', alt.Tooltip('mean(laptime)', format='.3f'), 'mean(harshness)']
             )
         return alt.Chart(df).mark_point(filled=True).encode(
             y = alt.Y('laptime:Q', axis=alt.Axis(title='Laptime [s]'), scale=alt.Scale(zero=False)),
             x = alt.X('harshness:Q', axis=alt.Axis(title='Harshness'), scale=alt.Scale(zero=False)),
             color = alt.Color('lap:N', scale=alt.Scale(scheme='tableau10'), legend=alt.Legend(title='Lap number')),
             shape=alt.Shape('driver:N', legend=alt.Legend(title='Driver')),
-            tooltip=['lap', 'laptime', 'driver']
+            tooltip=['lap', alt.Tooltip('laptime', format='.3f'), 'driver']
         )
     
     def braking_charts(self, turns_json: list[dict], chart_sections: int = 4, laps: list = [], drivers: bool = False) -> tuple[alt.Chart]:
@@ -184,7 +184,7 @@ class Run:
                         legend=alt.Legend(title='Lap number', orient='top')),
                     alt.ColorValue('grey'),
                 ),
-                tooltip=['delta:Q']
+                tooltip=[alt.Tooltip('delta:Q', format='.3f')]
             ) + rulers_chart).properties(
                 title=f'Time difference along track (lap {lapA} - lap {lapB})',
             )

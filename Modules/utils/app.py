@@ -76,4 +76,4 @@ def laps_df(laps: list, info: dict, lapA: int = None, lapB: int = None) -> pd.Da
     return laps_df.style.apply(
         lambda row: color_laps_df_rows(row, info, lapA, lapB),
         axis=1
-    )
+    ).format('{:.3f}', subset=['Laptime'])

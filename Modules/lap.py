@@ -91,7 +91,7 @@ class Lap:
             x=alt.X('VN_ax:Q', axis=alt.Axis(title='Tansversal Acceleration [m/s²]'), scale=alt.Scale(domain=[-domain, domain])),
             y=alt.Y('VN_ay:Q', axis=alt.Axis(title='Longitudinal Acceleration [m/s²]'), scale=alt.Scale(domain=[-domain, domain])),
             color=alt.Color('laps:N', scale=alt.Scale(scheme='tableau10'), legend=alt.Legend(title='Lap number', orient='top')),
-            tooltip=[alt.Tooltip(field='VN_ax', type='quantitative', title='Tansversal Acc.'), alt.Tooltip(field='VN_ay', type='quantitative', title='Longitudinal Acc.')]
+            tooltip=[alt.Tooltip(field='VN_ax', type='quantitative', title='Transversal Acc.'), alt.Tooltip(field='VN_ay', type='quantitative', title='Longitudinal Acc.')]
         ).properties(
             height=350,
             title="GG Diagram"

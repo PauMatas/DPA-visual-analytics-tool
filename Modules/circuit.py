@@ -295,14 +295,14 @@ class CircuitChart(Circuit):
                 legend=alt.Legend(title="Time Info", orient="left"),
 
             )
-            tooltip_labels = {'sector': 'Microsector' if microsectors else 'Sector'}
+            tooltip = [alt.Tooltip(field='sector', title='Microsector' if microsectors else 'Sector')]
         else:
             color = alt.condition(
                 alt.datum.delta != -1,
                 alt.Color("delta:N", scale=alt.Scale(scheme="tableau10"), legend=alt.Legend(title=f"Lap number", orient="left")),
                 alt.value("grey"),
             )
-            tooltip_labels = {'delta': 'LapA time-LapB time', 'sector': 'Microsector' if microsectors else 'Sector'}
+            tooltip = [alt.Tooltip(field='delta', title='LapA time-LapB time', format='.3f'), alt.Tooltip(field='sector', title='Microsector' if microsectors else 'Sector')]
 
         return alt.Chart(df).mark_line().encode(
             x=alt.X("x", axis=None),
@@ -315,7 +315,7 @@ class CircuitChart(Circuit):
                 alt.value(10),
                 alt.value(1)),
             strokeOpacity=alt.value(1),
-            tooltip=[alt.Tooltip(field=field, title=label) for field, label in tooltip_labels.items()],
+            tooltip=tooltip,
         ).properties(
             title=f"Fastest lap per {'microsector' if microsectors else 'sector'}"
         )
