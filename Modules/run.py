@@ -169,7 +169,7 @@ class Run:
         })
         domain = np.max(np.abs(data['delta'].quantile([0.05, 0.95]).values.tolist()))
 
-        rulers_chart = self._laps_delta_comparison_rulers_chart(circuit, lapA, lapB, sector, microsectors)
+        rulers_chart = self._laps_delta_comparison_rulers_chart(circuit, lapA, lapB, sector, microsectors, domain)
 
         return (alt.Chart(data).mark_area(fillOpacity=0.75).encode(
                 x=alt.X('dist:Q', axis=alt.Axis(title='Distance covered [m]')),
@@ -189,13 +189,14 @@ class Run:
                 title=f'Time difference along track (lap {lapA} - lap {lapB})',
             )
 
-    def _laps_delta_comparison_rulers_chart(self, circuit: Circuit, lapA: int, lapB: int, sector: None|int|list, microsectors: bool) -> alt.Chart:
+    def _laps_delta_comparison_rulers_chart(self, circuit: Circuit, lapA: int, lapB: int, sector: None|int|list, microsectors: bool, domain: float) -> alt.Chart:
         circuit_length = self.laps[lapA].df['dist1'].sum()
         
         if sector is None:
             start = circuit.middle_curve.t[0]
             end = circuit.middle_curve.t[-1]
             intervals = circuit.N_MICROSECTORS if microsectors else circuit.N_SECTORS
+            sector = [0, 1, 2]
         elif microsectors:
             start = circuit.middle_curve.t[-1] * (sector[0] - 1) / circuit.N_MICROSECTORS
             end = circuit.middle_curve.t[-1] * sector[-1] / circuit.N_MICROSECTORS
@@ -204,13 +205,21 @@ class Run:
             start = circuit.middle_curve.t[-1] * (sector - 1) / circuit.N_SECTORS
             end = circuit.middle_curve.t[-1] * sector / circuit.N_SECTORS
             intervals = 1
+            sector = [sector]
 
         if 1 < intervals <= 10:
             rulers = [((start + ((end - start) * (i+1)/intervals))/circuit.middle_curve.t[-1]) * circuit_length for i in range(intervals)]
         else:
             rulers = []
+            sector = []
 
         return alt.Chart(pd.DataFrame({'x': rulers})).mark_rule(strokeDash=[5, 5], strokeOpacity=0.5).encode(
             x='x:Q',
             tooltip=alt.value(None)
+        ) + alt.Chart(pd.DataFrame({'x': [r - 3 for r in rulers], 'y': [domain] * len(rulers), 'sector': sector})).mark_text().encode(
+            x='x:Q',
+            y='y:Q',
+            text='sector:N',
+            tooltip=alt.value(None)
         )
+            

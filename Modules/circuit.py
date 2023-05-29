@@ -94,8 +94,8 @@ class CircuitChart(Circuit):
         if info != ['None'] and middle_curve_df is not None:
             sectors = []
             sector_idx = []
-            for i, sector in enumerate(info):
-                sectors += [sector] * (len(lines_df) // len(info))
+            for i, sect in enumerate(info):
+                sectors += [sect] * (len(lines_df) // len(info))
                 sector_idx += [i] * (len(lines_df) // len(info))
             sectors += [info[-1]] * (len(lines_df) - len(sectors))
             sector_idx += [i] * (len(lines_df) - len(sector_idx))
@@ -121,7 +121,7 @@ class CircuitChart(Circuit):
                         alt.value("black")
                     )
 
-        return alt.Chart(lines_df).mark_line().encode(
+        chart = alt.Chart(lines_df).mark_line().encode(
             x=alt.X("x:Q", axis=None),
             y=alt.Y("y:Q", axis=None),
             color=color,
@@ -139,6 +139,45 @@ class CircuitChart(Circuit):
         ).properties(
             title=chart_title,
         )
+
+        if isinstance(sector, list) and 10 >= len(sector) > 1:
+            if not microsectors and sector is None:
+                sector = [0, 1, 2]
+            return chart + self._sector_rulers_in_circuit(sector, microsectors)
+        return chart
+
+    def _sector_rulers_in_circuit(self, sector: list, microsectors: bool) -> alt.Chart:
+        doors_json = []
+        for track_name, track in {"interior": self.interior_curve, "exterior": self.exterior_curve}.items():
+            doors = [track(track.t[-1] * (i+1)/(self.N_MICROSECTORS if microsectors else self.N_SECTORS)) for i in sector]
+            doors_json += [{
+                "x": door[0],
+                "y": door[1],
+                "sector": i + 1,
+            } for i, door in zip(sector, doors)]
+        doors_df = pd.DataFrame(doors_json)
+
+        text_df = pd.DataFrame([{
+            "x": doors_json[0]["x"],
+            "y": doors_json[0]["y"] + 1,
+            "sector": doors_json[0]["sector"],
+        }])
+
+
+        return alt.Chart(doors_df).mark_line(strokeDash=[5, 5], strokeOpacity=0.5).encode(
+            x=alt.X("x", axis=None),
+            y=alt.Y("y", axis=None),
+            detail="sector:N",
+            color=alt.value("black"),
+            tooltip=alt.value(None),
+        ) + alt.Chart(text_df).mark_text().encode(
+            x=alt.X("x", axis=None),
+            y=alt.Y("y", axis=None),
+            text="sector:N",
+            color=alt.value("black"),
+            tooltip=alt.value(None),
+        )
+
     
     def track_chart(self, microsectors: bool = False) -> alt.Chart:
         """Charts the circuit layout with the sectors and microsectors
