@@ -136,8 +136,7 @@ with run_panel:
                 throttle_harshness_chart = RUN_OBJECTS_DICT[run_selector].throttle_harshness_chart(laps=lap_numbers)
                 steering_harshness_chart = RUN_OBJECTS_DICT[run_selector].steering_harshness_chart(laps=lap_numbers)
 
-            st.altair_chart(throttle_harshness_chart.properties(height=300), use_container_width=True)
-            st.altair_chart(steering_harshness_chart.properties(height=300), use_container_width=True)
+            st.altair_chart(alt.vconcat(throttle_harshness_chart.properties(height=200, width=220), steering_harshness_chart.properties(height=200, width=220)), use_container_width=True)
 
     with drivers_tab:
         if lapA_selector != '<select>':
