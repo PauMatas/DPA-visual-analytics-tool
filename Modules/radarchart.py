@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 
 COLORS = [ # tableau 10
-    '#4E79A7', '#F28E2B', '#E15759', '#86BCB6', '#59A14F', '#F1CE63', '#B07AA1', '#FF9D9A', '#9D7660', '#BAB0AC']
+    '#4E79A7', '#F28E2B', '#E15759', '#86BCB6', '#59A14F', '#F1CE63', '#B07AA1', '#FF9D9A', '#9D7660', '#BAB0AC'] * 2
 
 # COLORS = [ # tableau 20
 #     '#4E79A7', '#A0CBE8', '#F28E2B', '#FFBE7D', '#59A14F', '#8CD17D', '#B6992D', '#F1CE63', '#499894', '#86BCB6',

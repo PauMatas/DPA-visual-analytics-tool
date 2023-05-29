@@ -3,7 +3,7 @@ import numpy as np
 import json
 from os import makedirs
 
-from gro.gro4dpa import *
+from gro.gro4dpa import * # run_GRO_online, run_GRO, ..., run_midline
 
 
 DATA_DIR = './data'
@@ -15,12 +15,17 @@ def generate_run(gates: Gates, circuit: CircuitChart) -> tuple[list[pd.DataFrame
     """Generate a run of the circuit."""
 
     algorithms = {
-        'GRO-Online': run_GRO_online,
+        # 'GRO-Online': run_GRO_online,
         # 'GRO': run_GRO,
         # 'MinCurv': run_min_curv,
         # 'MinDist': run_min_dist,
         # # 'MinCurvDist': run_min_curv_dist,
-        'MidLine': run_midline,
+        # 'MidLine': run_midline,
+
+        'Alice': run_GRO_online,
+        'Bob': run_GRO_online,
+        'Charlie': run_GRO_online,
+        'Dave': run_GRO_online,
     }
     
     runs_dfs_list = []
@@ -28,9 +33,10 @@ def generate_run(gates: Gates, circuit: CircuitChart) -> tuple[list[pd.DataFrame
 
     for driver, algorithm in algorithms.items():
         print('\t' + f'Running {driver}')
-        run_df = algorithm(gates, circuit)
-        runs_dfs_list.append(run_df)
-        drivers.append(driver)
+        run_df = algorithm(gates, circuit, driver=driver)
+        if not run_df.empty:
+            runs_dfs_list.append(run_df)
+            drivers.append(driver)
 
     return runs_dfs_list, drivers
 
