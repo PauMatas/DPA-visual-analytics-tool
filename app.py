@@ -236,7 +236,7 @@ with lap_panel:
                             lapB=lapB_selector - RUN_OBJECTS_DICT[run_selector].lap_map[lapB_selector]
                             )
                         st.altair_chart(
-                            circuit.colored_sectors_chart(sectors_comparison),
+                            circuit.colored_sectors_chart(sectors_comparison, laps=[lapA_selector, lapB_selector]),
                             use_container_width=True
                         )
 
@@ -336,7 +336,7 @@ with lap_panel:
                             microsectors=True
                             )
                         st.altair_chart(
-                            circuit.colored_sectors_chart(microsectors_comparison, microsectors=True),
+                            circuit.colored_sectors_chart(microsectors_comparison, microsectors=True, laps=[lapA_selector, lapB_selector]),
                             use_container_width=True
                         )
 

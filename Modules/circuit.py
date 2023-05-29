@@ -245,7 +245,7 @@ class CircuitChart(Circuit):
         self.sector_doors = [self.middle_curve(self.middle_curve.t[-1] * (i+1)/self.N_SECTORS) for i in range(self.N_SECTORS)]
         self.microsector_doors = [self.middle_curve(self.middle_curve.t[-1] * (i+1)/self.N_MICROSECTORS) for i in range(self.N_MICROSECTORS)]
 
-    def colored_sectors_chart(self, info: list, microsectors: bool = False) -> alt.Chart:
+    def colored_sectors_chart(self, info: list, microsectors: bool = False, laps: list = []) -> alt.Chart:
         """Charts the circuit layout with the sectors colored depending on the time performance
 
         Arguments:
@@ -296,6 +296,13 @@ class CircuitChart(Circuit):
 
             )
             tooltip = [alt.Tooltip(field='sector', title='Microsector' if microsectors else 'Sector')]
+        elif laps != []:
+            color = alt.condition(
+                alt.datum.delta != -1,
+                alt.Color("delta:N", scale=alt.Scale(domain=laps, range=['#4E79A7', '#F28E2B']), legend=alt.Legend(title=f"Lap number", orient="left")),
+                alt.value("grey"),
+            )
+            tooltip = [alt.Tooltip(field='delta', title='LapA time-LapB time', format='.3f'), alt.Tooltip(field='sector', title='Microsector' if microsectors else 'Sector')]
         else:
             color = alt.condition(
                 alt.datum.delta != -1,
