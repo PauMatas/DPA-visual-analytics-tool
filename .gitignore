@@ -112,3 +112,9 @@ gro/
 *.swp
 *.swo
 *.bak
+
+# Survey
+notebooks/DPA_SUS(respostes).csv
+notebooks/SurveyCharts.ipynb
+notebooks/Comparacio_adaptat.ipynb
+notebooks/racing_line.ipynb
