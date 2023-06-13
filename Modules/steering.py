@@ -35,7 +35,7 @@ class Steering:
         steering_difference_json = [{'steering_difference': diff, 'time': time} for diff, time in zip(self._angle_difference_to_smoothed, self._time)]
         steering_difference_df = pd.DataFrame(steering_difference_json)
         
-        return alt.Chart(pd.DataFrame(steering_difference_df)).mark_line().encode(
+        return alt.Chart(pd.DataFrame(steering_difference_df)).mark_area().encode(
             y='steering_difference:Q',
             x = 'time:T'
         )

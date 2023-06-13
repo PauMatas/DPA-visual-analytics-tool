@@ -1,6 +1,6 @@
 import numpy as np
 
-def smooth(x: np.ndarray, window_len: int = 21, window: str = 'hamming'):
+def smooth(x: np.ndarray, window_len: int = 201, window: str = 'hamming'):
     """smooth the data using a window with requested size.
     
     This method is based on the convolution of a scaled window with the signal.

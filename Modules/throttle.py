@@ -34,7 +34,7 @@ class Throttle:
         throttle_difference_json = [{'throttle_difference': diff, 'time': time} for diff, time in zip(self._throttle_difference_to_smoothed, self._time)]
         throttle_difference_df = pd.DataFrame(throttle_difference_json)
         
-        return alt.Chart(pd.DataFrame(throttle_difference_df)).mark_line().encode(
+        return alt.Chart(pd.DataFrame(throttle_difference_df)).mark_area(color='orange').encode(
             y='throttle_difference:Q',
             x = 'time:T'
         )
