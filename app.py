@@ -48,7 +48,7 @@ with header_panel:
 with st.sidebar:
     st.header('Select run and lap')
     run_selector = st.selectbox(
-        'Select run',
+        'Select circuit',
         RUNS,
         index=0
     )
@@ -129,8 +129,8 @@ with run_panel:
 
         with harshness_panel:
             if lapA_selector == '<select>':
-                throttle_harshness_chart = RUN_OBJECTS_DICT[run_selector].throttle_harshness_chart()
-                steering_harshness_chart = RUN_OBJECTS_DICT[run_selector].steering_harshness_chart()
+                throttle_harshness_chart = RUN_OBJECTS_DICT[run_selector].throttle_harshness_chart(scheme="tableau20")
+                steering_harshness_chart = RUN_OBJECTS_DICT[run_selector].steering_harshness_chart(scheme="tableau20")
             else:
                 lap_numbers = [lapA_selector, lapB_selector] if lapB_selector != '<select>' else [lapA_selector]
                 throttle_harshness_chart = RUN_OBJECTS_DICT[run_selector].throttle_harshness_chart(laps=lap_numbers)

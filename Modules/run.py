@@ -57,25 +57,25 @@ class Run:
         return sum
 
 
-    def steering_harshness_chart(self, laps: list[int] = None, drivers: bool = False) -> alt.Chart:
+    def steering_harshness_chart(self, laps: list[int] = None, drivers: bool = False, scheme: str = "tableau10") -> alt.Chart:
         steering_json = [
             {'harshness': lap.steering.harshness, 'lap': lap.number, 'laptime': lap.laptime, 'driver': lap.driver}
             for lap in (self.laps if laps is None else [self.laps[i] for i in laps])
             if lap.laptime is not None
         ]
-        chart = self._harshness_chart(pd.DataFrame(steering_json), drivers=drivers)
+        chart = self._harshness_chart(pd.DataFrame(steering_json), drivers=drivers, scheme=scheme)
         return chart.properties(title='Steering harshness vs laptime')
     
-    def throttle_harshness_chart(self, laps: list[int] = None, drivers: bool = False) -> alt.Chart:
+    def throttle_harshness_chart(self, laps: list[int] = None, drivers: bool = False, scheme: str = "tableau10") -> alt.Chart:
         throttle_json = [
             {'harshness': lap.throttle.harshness, 'lap': lap.number, 'laptime': lap.laptime, 'driver': lap.driver}
             for lap in (self.laps if laps is None else [self.laps[i] for i in laps])
             if lap.laptime is not None
         ]
-        chart = self._harshness_chart(pd.DataFrame(throttle_json), drivers=drivers)
+        chart = self._harshness_chart(pd.DataFrame(throttle_json), drivers=drivers, scheme=scheme)
         return chart.properties(title='Throttle harshness vs laptime')
 
-    def _harshness_chart(self, df, drivers) -> alt.Chart:
+    def _harshness_chart(self, df: pd.DataFrame, drivers: bool, scheme: str) -> alt.Chart:
         if drivers:
             return alt.Chart(df).mark_point(filled=True).encode(
                 y = alt.Y('mean(laptime):Q', axis=alt.Axis(title='Laptime [s]'), scale=alt.Scale(zero=False)),
@@ -87,7 +87,7 @@ class Run:
         return alt.Chart(df).mark_point(filled=True).encode(
             y = alt.Y('laptime:Q', axis=alt.Axis(title='Laptime [s]'), scale=alt.Scale(zero=False)),
             x = alt.X('harshness:Q', axis=alt.Axis(title='Harshness'), scale=alt.Scale(zero=False)),
-            color = alt.Color('lap:N', scale=alt.Scale(scheme='tableau10'), legend=alt.Legend(title='Lap number')),
+            color = alt.Color('lap:N', scale=alt.Scale(scheme=scheme), legend=alt.Legend(title='Lap number')),
             shape=alt.Shape('driver:N', legend=alt.Legend(title='Driver')),
             tooltip=['lap', alt.Tooltip('laptime', format='.3f'), 'driver']
         )
