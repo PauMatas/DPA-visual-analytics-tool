@@ -98,7 +98,6 @@ dmypy.json
 # Data
 TODO.md
 real_data/
-data/**/*.csv
 20221216_Run2.csv
 
 # TILK-E
