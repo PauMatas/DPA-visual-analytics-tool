@@ -19,7 +19,7 @@ debugpy==1.6.7
 decorator==5.1.1
 Deprecated==1.2.13
 dill==0.3.6
--e git+https://github.com/PauMatas/DPA-visualization-tool.git@5a8280cbe1a49f49bdb70f17d10cc1f1b7e10ec5#egg=DPA_visualization_tool
+-e git+https://github.com/PauMatas/DPA-visualization-tool.git@f4ef5020e4d9e975a788891efdf9b9956409e62a#egg=DPA_visualization_tool
 entrypoints==0.4
 executing==1.2.0
 fonttools==4.39.3
@@ -89,6 +89,9 @@ tzdata==2023.3
 tzlocal==4.3
 urllib3==1.26.15
 validators==0.20.0
+vegafusion==1.2.3
+vegafusion-python-embed==1.2.3
+vl-convert-python==0.9.0
 watchdog==3.0.0
 wcwidth==0.2.6
 wrapt==1.15.0
