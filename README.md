@@ -57,7 +57,7 @@ If you choose to use your own real data, save it as csv files in the data folder
 | microsector | Current microsector |
 
 > **_NOTE:_**   
-If you decide to use real data remember to save it in the expected format. Splited by circuits and with the `turns.json` and `info.json` files.
+If you decide to use real data remember to save it in the expected format, shown in this [directory](/data). Splited by circuits and with the `turns.json` and `info.json` files.
 
 ## Examples
 
