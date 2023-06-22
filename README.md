@@ -61,8 +61,37 @@ If you decide to use real data remember to save it in the expected format. Split
 
 ## Examples
 
-:construction: Work in progress :construction:
+Some of the features of the application are shown below.
 
+### Harshness chart
+
+One of the charts that we have developed is the harshness chart. This chart shows the harshness of the drivers' driving with the analysis of the throttle and steering. The chart also intends to allow comparison between drivers' harshness and to allow detection of driving styles.
+
+The harshness metrics are calculated as follows:
+
+![Example 1.1](img/harshness.png)
+
+And can be seen in the right part of the application's _Run Overview_ panel:
+
+![Example 1.2](img/gifs/harshness.gif)
+
+### Lap selection
+
+For our application it is crucial to be able to compare laps -whether they are from the same driver or not-. For this reason, we have developed a lap selection tool that allows the user to select the laps that he wants to compare. When laps are selected, the _Lap Overview_ panel view changes:
+
+![Example 2](img/gifs/seleccionarvoltes.gif)
+
+### Lap overview panel with a microsector range selected
+
+When two laps are selected and we select a range of microsectors (as shown in the gif below), the _Lap Overview_ panel shows the comparison of the selected microsectors. This allows the user to compare the racing lines, the accelerations suffered by the car and the time difference between the two laps.
+
+![Example 3.1](img/gifs/microsectorsrange.gif)
+
+This _Lap overview_ example (shown below)gives a big amount of information to both the team and the drivers. It tells the team that the orange driver is capable to choose a better racing line which allows to gain 0.4s to the other driver in just three turns. Apart from that, it tells the team that the orange driver is capable to push more the car to its limits (as seen in the GG Diagram). Finally, it also tells the team that if the orange driver is able to go through three corners with only one steering wheel turn, he might have a better cornering ability.   
+On the other hand, this Lap overview section tells the blue driver that the car limits can be pushed more and that the three corners can be surpassed with a more efficient racing line.   
+In a more subtle way, the orange driver can see that in the last microsectors of this range he loses a bit of time advantage (as seen in the time difference chart). It can mean that the blue driver goes out of the last turn with more velocity and in an hypothetical long straight after the last turn the blue driver might gain advantage.
+
+![Example 3.2](img/LapOverview.png)
 
 ## Contributing
 
